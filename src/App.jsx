@@ -40,7 +40,7 @@ function App() {
       axios.put(`${API_URL}/expenses/${editIndex}`, newExpense)
         .then(res => {
           const newExpenses = [...expenses];
-          newExpenses[editIndex] = res.data; // res.data é o objeto atualizado
+          newExpenses[editIndex] = res.data; // objeto atualizado
           setExpenses(newExpenses);
           resetForm();
         })
@@ -49,7 +49,7 @@ function App() {
       // Adicionar novo gasto
       axios.post(`${API_URL}/expenses`, newExpense)
         .then(res => {
-          setExpenses([...expenses, res.data]); // res.data é o objeto do gasto
+          setExpenses([...expenses, res.data]); // objeto do gasto
           resetForm();
         })
         .catch(err => console.error(err));
