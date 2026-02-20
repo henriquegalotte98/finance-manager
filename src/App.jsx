@@ -13,7 +13,8 @@ function App() {
 
   // Buscar gastos ao carregar
   useEffect(() => {
-    axios.get("http://localhost:3000/expenses")
+    axios.get("https://finance-manager-irdb.onrender.com/expenses")
+
       .then(res => setExpenses(res.data))
       .catch(err => console.error(err));
   }, []);
@@ -31,7 +32,7 @@ function App() {
       numberTimes
     };
 
-    axios.post("http://localhost:3000/expenses", newExpense)
+    axios.post("https://finance-manager-irdb.onrender.com/expenses", newExpense)
       .then(res => {
         setExpenses([...expenses, res.data.expense]);
         // limpar campos
@@ -96,31 +97,31 @@ function App() {
 
           <div>
             <div>
-              <input 
-                type="text" 
-                placeholder='Conta ou serviço' 
-                value={service} 
-                onChange={(e) => setService(e.target.value)} 
+              <input
+                type="text"
+                placeholder='Conta ou serviço'
+                value={service}
+                onChange={(e) => setService(e.target.value)}
               />
-              <input 
-                type="number" 
-                placeholder='Preço' 
-                style={{ width: '100px' }} 
-                value={price} 
-                onChange={(e) => setPrice(e.target.value)} 
+              <input
+                type="number"
+                placeholder='Preço'
+                style={{ width: '100px' }}
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
               />
-              <input 
-                type="date" 
-                placeholder='Data do vencimento' 
-                value={dueDate} 
-                onChange={(e) => setDueDate(e.target.value)} 
+              <input
+                type="date"
+                placeholder='Data do vencimento'
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
               />
 
-              <select 
-                name="payment_method" 
-                id="payment_method" 
-                className='payment_method' 
-                value={paymentMethod} 
+              <select
+                name="payment_method"
+                id="payment_method"
+                className='payment_method'
+                value={paymentMethod}
                 onChange={handlePaymentMethodChange}
               >
                 <option value="credit_card">Cartão de Crédito</option>
@@ -131,15 +132,15 @@ function App() {
               </select>
 
               {(paymentMethod === 'credit_card' || paymentMethod === 'credit_store') && (
-                <select 
-                  name="number_times" 
-                  id="number_times" 
-                  className='number_times' 
-                  value={numberTimes} 
+                <select
+                  name="number_times"
+                  id="number_times"
+                  className='number_times'
+                  value={numberTimes}
                   onChange={(e) => setNumberTimes(e.target.value)}
                 >
                   {[...Array(12)].map((_, i) => (
-                    <option key={i+1} value={i+1}>{i+1}x</option>
+                    <option key={i + 1} value={i + 1}>{i + 1}x</option>
                   ))}
                 </select>
               )}
