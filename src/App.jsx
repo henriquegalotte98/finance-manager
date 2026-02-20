@@ -10,15 +10,21 @@ function App() {
   const [price, setPrice] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [expenses, setExpenses] = useState([]);
-  const [editIndex, setEditIndex] = useState(null); // controla se estamos editando
+  const [editIndex, setEditIndex] = useState(null);
 
-  // URL da API vinda da variável de ambiente
   const API_URL = import.meta.env.VITE_API_URL;
 
   // Buscar gastos ao carregar
   useEffect(() => {
     axios.get(`${API_URL}/expenses`)
-      .then(res => setExpenses(res.data))
+      .then(res => {
+        if (Array.isArray(res.data)) {
+          setExpenses(res.data);
+        } else {
+          console.error("Resposta inesperada da API:", res.data);
+          setExpenses([]);
+        }
+      })
       .catch(err => console.error(err));
   }, [API_URL]);
 
@@ -34,7 +40,7 @@ function App() {
       axios.put(`${API_URL}/expenses/${editIndex}`, newExpense)
         .then(res => {
           const newExpenses = [...expenses];
-          newExpenses[editIndex] = res.data.expense;
+          newExpenses[editIndex] = res.data; // res.data é o objeto atualizado
           setExpenses(newExpenses);
           resetForm();
         })
@@ -43,7 +49,7 @@ function App() {
       // Adicionar novo gasto
       axios.post(`${API_URL}/expenses`, newExpense)
         .then(res => {
-          setExpenses([...expenses, res.data.expense]);
+          setExpenses([...expenses, res.data]); // res.data é o objeto do gasto
           resetForm();
         })
         .catch(err => console.error(err));
@@ -186,7 +192,7 @@ function App() {
 
             <h3>📊 Lista de gastos</h3>
             <ul>
-              {expenses.map((exp, i) => (
+              {Array.isArray(expenses) && expenses.map((exp, i) => (
                 <li key={i}>
                   {exp.service} - R${exp.price} - {exp.paymentMethod} - {exp.numberTimes}x - {exp.dueDate}
                   <button onClick={() => startEditExpense(i)}>Editar</button>
