@@ -11,13 +11,15 @@ function App() {
   const [dueDate, setDueDate] = useState('');
   const [expenses, setExpenses] = useState([]);
 
+  // URL da API vinda da variável de ambiente
+  const API_URL = import.meta.env.VITE_API_URL;
+
   // Buscar gastos ao carregar
   useEffect(() => {
-    axios.get("https://finance-manager-irdb.onrender.com/expenses")
-
+    axios.get(`${API_URL}/expenses`)
       .then(res => setExpenses(res.data))
       .catch(err => console.error(err));
-  }, []);
+  }, [API_URL]);
 
   const handlePaymentMethodChange = (event) => {
     setPaymentMethod(event.target.value);
@@ -32,7 +34,7 @@ function App() {
       numberTimes
     };
 
-    axios.post("https://finance-manager-irdb.onrender.com/expenses", newExpense)
+    axios.post(`${API_URL}/expenses`, newExpense)
       .then(res => {
         setExpenses([...expenses, res.data.expense]);
         // limpar campos
