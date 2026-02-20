@@ -10,6 +10,7 @@ function App() {
   const [price, setPrice] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [expenses, setExpenses] = useState([]);
+  const [editIndex, setEditIndex] = useState(null); // controla se estamos editando
 
   // URL da API vinda da variável de ambiente
   const API_URL = import.meta.env.VITE_API_URL;
@@ -26,25 +27,55 @@ function App() {
   }
 
   const addExpense = () => {
-    const newExpense = {
-      service,
-      price,
-      dueDate,
-      paymentMethod,
-      numberTimes
-    };
+    const newExpense = { service, price, dueDate, paymentMethod, numberTimes };
 
-    axios.post(`${API_URL}/expenses`, newExpense)
-      .then(res => {
-        setExpenses([...expenses, res.data.expense]);
-        // limpar campos
-        setService('');
-        setPrice('');
-        setDueDate('');
-        setPaymentMethod('credit_card');
-        setNumberTimes('1');
+    if (editIndex !== null) {
+      // Atualizar gasto existente
+      axios.put(`${API_URL}/expenses/${editIndex}`, newExpense)
+        .then(res => {
+          const newExpenses = [...expenses];
+          newExpenses[editIndex] = res.data.expense;
+          setExpenses(newExpenses);
+          resetForm();
+        })
+        .catch(err => console.error(err));
+    } else {
+      // Adicionar novo gasto
+      axios.post(`${API_URL}/expenses`, newExpense)
+        .then(res => {
+          setExpenses([...expenses, res.data.expense]);
+          resetForm();
+        })
+        .catch(err => console.error(err));
+    }
+  };
+
+  const removeExpense = (index) => {
+    axios.delete(`${API_URL}/expenses/${index}`)
+      .then(() => {
+        const newExpenses = expenses.filter((_, i) => i !== index);
+        setExpenses(newExpenses);
       })
       .catch(err => console.error(err));
+  };
+
+  const startEditExpense = (index) => {
+    const exp = expenses[index];
+    setService(exp.service);
+    setPrice(exp.price);
+    setDueDate(exp.dueDate);
+    setPaymentMethod(exp.paymentMethod);
+    setNumberTimes(exp.numberTimes);
+    setEditIndex(index);
+  };
+
+  const resetForm = () => {
+    setService('');
+    setPrice('');
+    setDueDate('');
+    setPaymentMethod('credit_card');
+    setNumberTimes('1');
+    setEditIndex(null);
   };
 
   return (
@@ -147,10 +178,10 @@ function App() {
                 </select>
               )}
 
-              <button className='btn_add' onClick={addExpense}>Adicionar</button>
-              <button className='btn_remove'>Remover</button>
-              <button className='btn_edit'>Editar</button>
-              <button className='btn_export'>Exportar</button>
+              <button className='btn_add' onClick={addExpense}>
+                {editIndex !== null ? "Salvar edição" : "Adicionar"}
+              </button>
+              <button className='btn_remove' onClick={resetForm}>Cancelar</button>
             </div>
 
             <h3>📊 Lista de gastos</h3>
@@ -158,6 +189,8 @@ function App() {
               {expenses.map((exp, i) => (
                 <li key={i}>
                   {exp.service} - R${exp.price} - {exp.paymentMethod} - {exp.numberTimes}x - {exp.dueDate}
+                  <button onClick={() => startEditExpense(i)}>Editar</button>
+                  <button onClick={() => removeExpense(i)}>Remover</button>
                 </li>
               ))}
             </ul>
