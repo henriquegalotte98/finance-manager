@@ -197,7 +197,6 @@ function App() {
                   <p>Vencimento: {exp.dueDate} - Serviço: {exp.service} - R${exp.price} - {exp.paymentMethod} - {exp.numberTimes}x</p>
                   <button onClick={() => startEditExpense(i)}>Editar</button>
                   <button onClick={() => removeExpense(i)}>Remover</button>
-                  <div className='div_separate'></div>
                 </li>
                 
               ))}
