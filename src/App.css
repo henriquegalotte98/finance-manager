@@ -299,7 +299,7 @@ li {
   flex-direction: row;
   align-items: baseline;
   justify-content: space-between;
-  
+  border-bottom: #bcc71f 1px solid;
 }
 .expense_actions{
   display: flex;
