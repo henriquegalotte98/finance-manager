@@ -309,3 +309,27 @@ li {
   justify-content: space-between;
   gap: 10px;
 }
+.expenses_table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.expenses_table th, .expenses_table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.expenses_table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+.expenses_table button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  margin: 0 5px;
+}

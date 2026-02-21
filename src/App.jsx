@@ -191,15 +191,36 @@ function App() {
             </div>
 
             <h3>📊 Lista de gastos</h3>
-            <ul>
-              {expenses.map((exp) => (
-                <li key={exp.id}>
-                  {exp.service} - R${exp.price} - {exp.paymentMethod} - {exp.numberTimes}x - {exp.dueDate}
-                  <button onClick={() => startEditExpense(exp)}>Editar</button>
-                  <button onClick={() => removeExpense(exp.id)}>Remover</button>
-                </li>
-              ))}
-            </ul>
+            <table className="expenses_table">
+              <thead>
+                <tr>
+                  <th>Serviço</th>
+                  <th>Preço</th>
+                  <th>Forma de Pagamento</th>
+                  <th>Parcelas</th>
+                  <th>Vencimento</th>
+                  <th>Registrado em</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {expenses.map((exp) => (
+                  <tr key={exp.id}>
+                    <td>{exp.service}</td>
+                    <td>R${exp.price}</td>
+                    <td>{exp.paymentMethod}</td>
+                    <td>{exp.numberTimes}x</td>
+                    <td>{exp.dueDate}</td>
+                    <td>{new Date(exp.created_at).toLocaleString()}</td>
+                    <td>
+                      <button onClick={() => startEditExpense(exp)} title="Editar">✏️</button>
+                      <button onClick={() => removeExpense(exp.id)} title="Remover">❌</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
           </div>
         </div>
       </div>

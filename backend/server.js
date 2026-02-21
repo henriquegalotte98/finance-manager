@@ -7,6 +7,25 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+
+
+
+// Criar tabela se não existir
+pool.query(`
+  CREATE TABLE IF NOT EXISTS expenses (
+    id SERIAL PRIMARY KEY,
+    service TEXT,
+    price NUMERIC,
+    dueDate DATE,
+    paymentMethod TEXT,
+    numberTimes INT,
+    created_at TIMESTAMP DEFAULT NOW()
+  )
+`);
+
+
+
+
 // Conexão com PostgreSQL (use a connection string do Render ou Supabase)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL, // configure no Render
@@ -27,18 +46,14 @@ pool.query(`
 
 // Criar gasto
 app.post("/expenses", async (req, res) => {
-  try {
-    const { service, price, dueDate, paymentMethod, numberTimes } = req.body;
-    const result = await pool.query(
-      "INSERT INTO expenses (service, price, dueDate, paymentMethod, numberTimes) VALUES ($1,$2,$3,$4,$5) RETURNING *",
-      [service, price, dueDate, paymentMethod, numberTimes]
-    );
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erro ao criar gasto" });
-  }
+  const { service, price, dueDate, paymentMethod, numberTimes } = req.body;
+  const result = await pool.query(
+    "INSERT INTO expenses (service, price, dueDate, paymentMethod, numberTimes) VALUES ($1,$2,$3,$4,$5) RETURNING *",
+    [service, price, dueDate, paymentMethod, numberTimes]
+  );
+  res.status(201).json(result.rows[0]);
 });
+
 
 // Listar gastos
 app.get("/expenses", async (req, res) => {
