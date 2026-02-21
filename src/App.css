@@ -293,3 +293,10 @@ li {
   background-color: white;
   margin: 10px 0px;
 }
+
+.expense_item{
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+}
