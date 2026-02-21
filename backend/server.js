@@ -10,20 +10,6 @@ app.use(bodyParser.json());
 
 
 
-// Criar tabela se não existir
-pool.query(`
-  CREATE TABLE IF NOT EXISTS expenses (
-    id SERIAL PRIMARY KEY,
-    service TEXT,
-    price NUMERIC,
-    dueDate DATE,
-    paymentMethod TEXT,
-    numberTimes INT,
-    created_at TIMESTAMP DEFAULT NOW()
-  )
-`);
-
-
 
 
 // Conexão com PostgreSQL (use a connection string do Render ou Supabase)
@@ -43,6 +29,22 @@ pool.query(`
     numberTimes INT
   )
 `);
+
+
+// Criar tabela se não existir
+pool.query(`
+  CREATE TABLE IF NOT EXISTS expenses (
+    id SERIAL PRIMARY KEY,
+    service TEXT,
+    price NUMERIC,
+    dueDate DATE,
+    paymentMethod TEXT,
+    numberTimes INT,
+    created_at TIMESTAMP DEFAULT NOW()
+  )
+`);
+
+
 
 // Criar gasto
 app.post("/expenses", async (req, res) => {
