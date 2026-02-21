@@ -194,7 +194,7 @@ function App() {
             <ul>
               {Array.isArray(expenses) && expenses.map((exp, i) => (
                 <li key={i}>
-                  {exp.service} - R${exp.price} - {exp.paymentMethod} - {exp.numberTimes}x - {exp.dueDate}
+                  Vencimento: {exp.dueDate} - Serviço: {exp.service} - R${exp.price} - {exp.paymentMethod} - {exp.numberTimes}x
                   <button onClick={() => startEditExpense(i)}>Editar</button>
                   <button onClick={() => removeExpense(i)}>Remover</button>
                 </li>
