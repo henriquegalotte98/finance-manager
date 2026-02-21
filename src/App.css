@@ -299,5 +299,12 @@ li {
   flex-direction: row;
   align-items: baseline;
   justify-content: space-between;
-  text-decoration: underline;
+  
+}
+.expense_actions{
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
 }
