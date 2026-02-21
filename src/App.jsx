@@ -211,7 +211,7 @@ function App() {
                     <td>{exp.paymentMethod}</td>
                     <td>{exp.numberTimes}x</td>
                     <td>{exp.dueDate}</td>
-                    <td>{new Date(exp.created_at).toLocaleString()}</td>
+                    <td>{exp.created_at ? new Date(exp.created_at).toLocaleString() : "-"}</td>
                     <td>
                       <button onClick={() => startEditExpense(exp)} title="Editar">✏️</button>
                       <button onClick={() => removeExpense(exp.id)} title="Remover">❌</button>
