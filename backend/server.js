@@ -1,53 +1,91 @@
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const { Pool } = require("pg");
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-let expenses = [];
+// Conexão com PostgreSQL (use a connection string do Render ou Supabase)
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL, // configure no Render
+  ssl: { rejectUnauthorized: false }
+});
+
+// Criar tabela se não existir
+pool.query(`
+  CREATE TABLE IF NOT EXISTS expenses (
+    id SERIAL PRIMARY KEY,
+    service TEXT,
+    price NUMERIC,
+    dueDate DATE,
+    paymentMethod TEXT,
+    numberTimes INT
+  )
+`);
 
 // Criar gasto
-app.post("/expenses", (req, res) => {
-  const expense = req.body;
-  expenses.push(expense);
-  res.status(201).json(expense); // retorna só o objeto
+app.post("/expenses", async (req, res) => {
+  try {
+    const { service, price, dueDate, paymentMethod, numberTimes } = req.body;
+    const result = await pool.query(
+      "INSERT INTO expenses (service, price, dueDate, paymentMethod, numberTimes) VALUES ($1,$2,$3,$4,$5) RETURNING *",
+      [service, price, dueDate, paymentMethod, numberTimes]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erro ao criar gasto" });
+  }
 });
 
 // Listar gastos
-app.get("/expenses", (req, res) => {
-  res.json(expenses); // sempre um array
+app.get("/expenses", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM expenses ORDER BY id ASC");
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erro ao listar gastos" });
+  }
 });
 
 // Atualizar gasto
-app.put("/expenses/:id", (req, res) => {
-  const { id } = req.params;
-  const updatedExpense = req.body;
-
-  if (!expenses[id]) {
-    return res.status(404).json({ message: "Gasto não encontrado" });
+app.put("/expenses/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { service, price, dueDate, paymentMethod, numberTimes } = req.body;
+    const result = await pool.query(
+      "UPDATE expenses SET service=$1, price=$2, dueDate=$3, paymentMethod=$4, numberTimes=$5 WHERE id=$6 RETURNING *",
+      [service, price, dueDate, paymentMethod, numberTimes, id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Gasto não encontrado" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erro ao atualizar gasto" });
   }
-
-  expenses[id] = updatedExpense;
-  res.json(updatedExpense); // retorna o objeto atualizado
 });
 
 // Remover gasto
-app.delete("/expenses/:id", (req, res) => {
-  const { id } = req.params;
-
-  if (!expenses[id]) {
-    return res.status(404).json({ message: "Gasto não encontrado" });
+app.delete("/expenses/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query("DELETE FROM expenses WHERE id=$1", [id]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Gasto não encontrado" });
+    }
+    res.json({ message: "Gasto removido!" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erro ao remover gasto" });
   }
-
-  expenses.splice(id, 1);
-  res.json({ message: "Gasto removido!" });
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
-
-/* teste pra ver se subiu server.js alterado */

@@ -10,7 +10,7 @@ function App() {
   const [price, setPrice] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [expenses, setExpenses] = useState([]);
-  const [editIndex, setEditIndex] = useState(null);
+  const [editId, setEditId] = useState(null); // agora guardamos o id do banco
 
   const API_URL = import.meta.env.VITE_API_URL;
 
@@ -35,13 +35,14 @@ function App() {
   const addExpense = () => {
     const newExpense = { service, price, dueDate, paymentMethod, numberTimes };
 
-    if (editIndex !== null) {
+    if (editId !== null) {
       // Atualizar gasto existente
-      axios.put(`${API_URL}/expenses/${editIndex}`, newExpense)
+      axios.put(`${API_URL}/expenses/${editId}`, newExpense)
         .then(res => {
-          const newExpenses = [...expenses];
-          newExpenses[editIndex] = res.data; // objeto atualizado
-          setExpenses(newExpenses);
+          const updated = expenses.map(exp =>
+            exp.id === editId ? res.data : exp
+          );
+          setExpenses(updated);
           resetForm();
         })
         .catch(err => console.error(err));
@@ -49,30 +50,29 @@ function App() {
       // Adicionar novo gasto
       axios.post(`${API_URL}/expenses`, newExpense)
         .then(res => {
-          setExpenses([...expenses, res.data]); // objeto do gasto
+          setExpenses([...expenses, res.data]); // objeto do gasto com id
           resetForm();
         })
         .catch(err => console.error(err));
     }
   };
 
-  const removeExpense = (index) => {
-    axios.delete(`${API_URL}/expenses/${index}`)
+  const removeExpense = (id) => {
+    axios.delete(`${API_URL}/expenses/${id}`)
       .then(() => {
-        const newExpenses = expenses.filter((_, i) => i !== index);
+        const newExpenses = expenses.filter(exp => exp.id !== id);
         setExpenses(newExpenses);
       })
       .catch(err => console.error(err));
   };
 
-  const startEditExpense = (index) => {
-    const exp = expenses[index];
+  const startEditExpense = (exp) => {
     setService(exp.service);
     setPrice(exp.price);
     setDueDate(exp.dueDate);
     setPaymentMethod(exp.paymentMethod);
     setNumberTimes(exp.numberTimes);
-    setEditIndex(index);
+    setEditId(exp.id); // guardamos o id do banco
   };
 
   const resetForm = () => {
@@ -81,7 +81,7 @@ function App() {
     setDueDate('');
     setPaymentMethod('credit_card');
     setNumberTimes('1');
-    setEditIndex(null);
+    setEditId(null);
   };
 
   return (
@@ -185,22 +185,19 @@ function App() {
               )}
 
               <button className='btn_add' onClick={addExpense}>
-                {editIndex !== null ? "Salvar edição" : "Adicionar"}
+                {editId !== null ? "Salvar edição" : "Adicionar"}
               </button>
               <button className='btn_remove' onClick={resetForm}>Cancelar</button>
             </div>
 
             <h3>📊 Lista de gastos</h3>
             <ul>
-              {Array.isArray(expenses) && expenses.map((exp, i) => (
-                <li key={i} className='expense_item'>
-                  <p>Vencimento: {exp.dueDate} - Serviço: {exp.service} - R${exp.price} - {exp.paymentMethod} - {exp.numberTimes}x</p>
-                  <div className='expense_actions'>
-                    <button onClick={() => startEditExpense(i)}>Editar</button>
-                    <button onClick={() => removeExpense(i)}>Remover</button>
-                  </div>
+              {expenses.map((exp) => (
+                <li key={exp.id}>
+                  {exp.service} - R${exp.price} - {exp.paymentMethod} - {exp.numberTimes}x - {exp.dueDate}
+                  <button onClick={() => startEditExpense(exp)}>Editar</button>
+                  <button onClick={() => removeExpense(exp.id)}>Remover</button>
                 </li>
-                
               ))}
             </ul>
           </div>
