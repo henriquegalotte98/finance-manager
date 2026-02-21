@@ -300,6 +300,7 @@ li {
   align-items: baseline;
   justify-content: space-between;
   border-bottom: #bcc71f 1px solid;
+  padding: 0px 10px;
 }
 .expense_actions{
   display: flex;
