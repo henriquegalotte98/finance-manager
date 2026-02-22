@@ -47,12 +47,35 @@ pool.query(`
 
 // Criar gasto
 app.post("/expenses", async (req, res) => {
-  const { service, price, dueDate, paymentMethod, numberTimes } = req.body;
-  const result = await pool.query(
-    "INSERT INTO expenses (service, price, dueDate, paymentMethod, numberTimes) VALUES ($1,$2,$3,$4,$5) RETURNING *",
-    [service, price, dueDate, paymentMethod, numberTimes]
-  );
-  res.status(201).json(result.rows[0]);
+  try {
+    const { service, price, dueDate, paymentMethod, numberTimes } = req.body;
+
+    const result = await pool.query(
+      "INSERT INTO expenses (service, price, dueDate, paymentMethod, numberTimes) VALUES ($1,$2,$3,$4,$5) RETURNING *",
+      [service, price, dueDate, paymentMethod, numberTimes]
+    );
+
+    const exp = result.rows[0];
+
+    const formatted = {
+      id: exp.id,
+      service: exp.service,
+      price: exp.price,
+      dueDate: exp.duedate
+        ? new Date(exp.duedate).toLocaleDateString("pt-BR") // dd/mm/aaaa
+        : null,
+      paymentMethod: exp.paymentmethod,
+      numberTimes: exp.numbertimes,
+      created_at: exp.created_at
+        ? new Date(exp.created_at).toLocaleString("pt-BR") // dd/mm/aaaa hh:mm:ss
+        : null
+    };
+
+    res.json(formatted);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Erro ao adicionar despesa");
+  }
 });
 
 
