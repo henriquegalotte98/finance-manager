@@ -11,7 +11,6 @@ app.use(bodyParser.json());
 
 
 
-
 // Conexão com PostgreSQL (use a connection string do Render ou Supabase)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL, // configure no Render
@@ -58,13 +57,23 @@ app.post("/expenses", async (req, res) => {
 
 
 // Listar gastos
+
 app.get("/expenses", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM expenses ORDER BY id ASC");
-    res.json(result.rows);
+    const formatted = result.rows.map(exp => ({
+      id: exp.id,
+      service: exp.service,
+      price: exp.price,
+      dueDate: exp.duedate,          // camelCase
+      paymentMethod: exp.paymentmethod, // camelCase
+      numberTimes: exp.numbertimes,  // camelCase
+      created_at: exp.created_at     // já está ok
+    }));
+    res.json(formatted);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Erro ao listar gastos" });
+    res.status(500).send("Erro ao buscar despesas");
   }
 });
 
