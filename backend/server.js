@@ -65,10 +65,14 @@ app.get("/expenses", async (req, res) => {
       id: exp.id,
       service: exp.service,
       price: exp.price,
-      dueDate: exp.duedate,          // camelCase
-      paymentMethod: exp.paymentmethod, // camelCase
-      numberTimes: exp.numbertimes,  // camelCase
-      created_at: exp.created_at     // já está ok
+      dueDate: exp.duedate
+        ? new Date(exp.duedate).toLocaleDateString("pt-BR") // dd/mm/aaaa
+        : null,
+      paymentMethod: exp.paymentmethod,
+      numberTimes: exp.numbertimes,
+      created_at: exp.created_at
+        ? new Date(exp.created_at).toLocaleString("pt-BR")
+        : null
     }));
     res.json(formatted);
   } catch (err) {
