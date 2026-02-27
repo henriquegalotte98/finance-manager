@@ -14,6 +14,14 @@ function App() {
 
   const API_URL = import.meta.env.VITE_API_URL;
 
+  // controlar qual app está aberto usando state em vez de manipular o DOM
+  const [activeApp, setActiveApp] = useState('home');
+
+  const showApp = (appName) => {
+    setActiveApp(appName);
+  };
+
+
   // Buscar gastos ao carregar
   useEffect(() => {
     axios.get(`${API_URL}/expenses`)
@@ -88,8 +96,8 @@ function App() {
     <div className='app_container'>
       <div className='side_menu_container'>
         <div className='side_header'>
-          <div className='logo'>
-            <li>{LogoIcon}</li>
+          <div className='logo' onClick={() => showApp('home')}>
+            <li onClick={() => showApp('home')}>{LogoIcon}</li>
             <div className='app_name'>
               <p>Finanças</p>
             </div>
@@ -109,24 +117,30 @@ function App() {
         </div>
         <div className='side_menu'>
           <menu>
-            <li>{HomeIcon}</li>
-            <li>{PlanilhaIcon}</li>
-            <li>{EconomiasIcon}</li>
-            <li>{DolarIcon}</li>
-            <li>{ViagensIcon}</li>
+            <li onClick={() => showApp('home')} >{HomeIcon}</li>
+            <li onClick={() => showApp('excel')}>{PlanilhaIcon}</li>
+            <li onClick={() => showApp('economias')}>{EconomiasIcon}</li>
+            <li onClick={() => showApp('dolar')}>{DolarIcon}</li>
+            <li onClick={() => showApp('viagens')}>{ViagensIcon}</li>
           </menu>
           <div className='subtitle_icons'>
-            <p>Início</p>
-            <p>Planilha</p>
-            <p>Economias</p>
-            <p>Dólar</p>
-            <p>Viagens</p>
+            <p onClick={() => showApp('home')}>Início</p>
+            <p onClick={() => showApp('excel')}>Planilha</p>
+            <p onClick={() => showApp('economias')}>Economias</p>
+            <p onClick={() => showApp('dolar')}>Dólar</p>
+            <p onClick={() => showApp('viagens')}>Viagens</p>
           </div>
         </div>
       </div>
 
       <div className='app'>
-        <div className='excel'>
+
+        <div id="home" className='home' style={{ display: activeApp === 'home' ? 'block' : 'none' }}>
+          <h1>Bem-vindo ao seu app de finanças pessoais!</h1>
+          <p>Use a barra lateral para navegar entre os aplicativos.</p>
+        </div>
+
+        <div id="excel" className='excel' style={{ display: activeApp === 'excel' ? 'block' : 'none' }}>
           <div className='excel_header'>
             <search>
               <input type="text" placeholder='Pesquisar...' className='search_input' />
@@ -223,6 +237,25 @@ function App() {
 
           </div>
         </div>
+
+
+
+        <div id="economias" className='economias' style={{ display: activeApp === 'economias' ? 'block' : 'none' }}>
+          <h2>App de Economias</h2>
+        </div>
+
+        <div id="dolar" className='dolar' style={{ display: activeApp === 'dolar' ? 'block' : 'none' }}>
+          <h2>App de Dólar</h2>
+        </div>
+
+        <div id="viagens" className='viagens' style={{ display: activeApp === 'viagens' ? 'block' : 'none' }}>
+          <h2>App de Viagens</h2>
+        </div>
+
+
+
+
+
       </div>
     </div>
   )

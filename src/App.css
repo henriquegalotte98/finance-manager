@@ -270,6 +270,7 @@ li {
   .subtitle_icons {
     transition: opacity 0.7s ease-in;
     opacity: 1;
+    pointer-events: auto; /* allow clicks when sidebar expanded */
   }
 }
 
