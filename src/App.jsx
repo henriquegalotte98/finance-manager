@@ -42,10 +42,35 @@ function App() {
    * @param {String} appName - Nome do app a ser aberto
    * @example showApp('home') // Mostra o app "home"
    */
+  /**
+   * Função para mostrar qual app está aberto
+   * @param {String} appName - Nome do app a ser aberto
+   * @example showApp('home') // Mostra o app "home"
+   * @returns {void} - Nenhum valor de retorno
+   */
+  /**
+   * Função para mostrar qual app está aberto
+   * @param {String} appName - Nome do app a ser aberto
+   * @example showApp('home') // Mostra o app "home"
+   * @returns {void} - Nenhum valor de retorno
+   */
   const showApp = (appName) => {
     // Altera o estado para mostrar o app com o nome especificado
     setActiveApp(appName);
   };
+
+  /**
+   * Docstring para a função showApp
+   * @memberof App
+   * @function showApp
+   * @param {String} appName - Nome do app a ser aberto
+   * @example
+   * showApp('home') // Mostra o app "home"
+   * @returns {void} - Nenhum valor de retorno
+   * @description
+   * Função para mostrar qual app está aberto.
+   * Altera o estado para mostrar o app com o nome especificado.
+   */
 
   /**
    * Função para buscar gastos do mês ao carregar ou mudar mês
@@ -75,6 +100,31 @@ function App() {
    *   <option value="debit_card">Cartão de Débito</option>
    *   <option value="cash">Dinheiro</option>
    * </select>
+   */
+  /**
+   * Função para tratar mudanças em select de forma de pagamento
+   * @param {Event} event - Evento de mudanças em select
+   * @example <select onChange={handlePaymentMethodChange}>
+   *   <option value="credit_card">Cartão de Crédito</option>
+   *   <option value="debit_card">Cartão de Débito</option>
+   *   <option value="cash">Dinheiro</option>
+   * </select>
+   */
+  /**
+   * Docstring para a função handlePaymentMethodChange
+   * @memberof App
+   * @function handlePaymentMethodChange
+   * @param {Event} event - Evento de mudanças em select
+   * @example
+   * <select onChange={handlePaymentMethodChange}>
+   *   <option value="credit_card">Cartão de Crédito</option>
+   *   <option value="debit_card">Cartão de Débito</option>
+   *   <option value="cash">Dinheiro</option>
+   * </select>
+   * @returns {void} - Nenhum valor de retorno
+   * @description
+   * Função para tratar mudanças em select de forma de pagamento.
+   * Atualizar estado com o valor selecionado.
    */
   const handlePaymentMethodChange = (event) => {
     // Atualizar estado com o valor selecionado
@@ -140,22 +190,66 @@ function App() {
    * @param {Number} id - ID do gasto a ser removido
    * @returns {Promise<void>} - Promise com resultado da remoção
    */
+  /**
+   * Função para remover um gasto
+   * @param {Number} id - ID do gasto a ser removido
+   * @returns {Promise<void>} - Promise com resultado da remoção
+   */
+  /**
+   * Função para remover um gasto
+   * @param {Number} id - ID do gasto a ser removido
+   * @returns {Promise<void>} - Promise com resultado da remoção
+   */
+  /**
+   * Função para remover um gasto
+   * @memberof App
+   * @function removeExpense
+   * @param {Number} id - ID do gasto a ser removido
+   * @returns {Promise<void>} - Promise com resultado da remoção
+   * @description
+   * Função para remover um gasto.
+   * Ela irá realizar uma requisição DELETE para remover o gasto.
+   * Após remover o gasto, ela irá recarregar as despesas do mês atual com a API e atualizar
+   * o estado `expenses` com a lista de despesas.
+   */
+  /**
+   * Função para remover um gasto
+   * @param {Number} id - ID do gasto a ser removido
+   * @returns {Promise<void>} - Promise com resultado da remoção
+   * @description
+   * Função para remover um gasto.
+   * Ela irá realizar uma requisição DELETE para remover o gasto.
+   * Após remover o gasto, ela irá recarregar as despesas do mês atual com a API e atualizar
+   * o estado `expenses` com a lista de despesas.
+   */
   const removeExpense = (id) => {
     // Realizar requisição DELETE para remover o gasto
-    axios.delete(`${API_URL}/expenses/${id}`)
+    return axios.delete(`${API_URL}/expenses/${id}`)
       .then(() => {
         // Recarregar despesas do mês
-        axios.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
-          .then(res => {
-            if (Array.isArray(res.data)) {
-              // Atualizar estado com as despesas do mês
-              setExpenses(res.data);
-            }
-          })
-          .catch(err => console.error(err));
+        return axios.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`);
+      })
+      .then(res => {
+        if (Array.isArray(res.data)) {
+          // Atualizar estado com as despesas do mês
+          setExpenses(res.data);
+        }
       })
       .catch(err => console.error(err));
   };
+
+  /**
+   * Docstring para a função removeExpense
+   * @memberof App
+   * @function removeExpense
+   * @param {Number} id - ID do gasto a ser removido
+   * @returns {Promise<void>} - Promise com resultado da remoção
+   * @description
+   * Função para remover um gasto.
+   * Ela irá realizar uma requisição DELETE para remover o gasto.
+   * Após remover o gasto, ela irá recarregar as despesas do mês atual com a API e atualizar
+   * o estado `expenses` com a lista de despesas.
+   */
 
   /**
    * Função para iniciar edição de um gasto
@@ -181,6 +275,16 @@ function App() {
    * Além disso, ela irá armazenar o ID do gasto no estado `editId`.
    * @param {Object} exp - Gasto a ser editado
    * @returns {void} - Nenhum valor de retorno
+   */
+  /**
+   * Função para iniciar edição de um gasto
+   * @param {Object} exp - Gasto a ser editado
+   * @returns {void} - Nenhum valor de retorno
+   * @description
+   * Função para iniciar edição de um gasto.
+   * Esta função é chamada quando o usuário clica em um gasto para editá-lo.
+   * Ela irá preencher os campos do formulário com os valores do gasto.
+   * Além disso, ela irá armazenar o ID do gasto no estado `editId`.
    */
   const startEditExpense = (exp) => {
     // Preencher os campos do formulário com os valores do gasto
