@@ -12,6 +12,10 @@ function App() {
   const [expenses, setExpenses] = useState([]);
   const [editId, setEditId] = useState(null); // agora guardamos o id do banco
 
+  // Estados para filtro de mês
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
   const API_URL = import.meta.env.VITE_API_URL;
 
   // controlar qual app está aberto usando state em vez de manipular o DOM
@@ -22,9 +26,9 @@ function App() {
   };
 
 
-  // Buscar gastos ao carregar
+  // Buscar gastos do mês ao carregar ou mudar mês
   useEffect(() => {
-    axios.get(`${API_URL}/expenses`)
+    axios.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
       .then(res => {
         if (Array.isArray(res.data)) {
           setExpenses(res.data);
@@ -34,7 +38,7 @@ function App() {
         }
       })
       .catch(err => console.error(err));
-  }, [API_URL]);
+  }, [API_URL, selectedMonth, selectedYear]);
 
   const handlePaymentMethodChange = (event) => {
     setPaymentMethod(event.target.value);
@@ -47,19 +51,30 @@ function App() {
       // Atualizar gasto existente
       axios.put(`${API_URL}/expenses/${editId}`, newExpense)
         .then(res => {
-          const updated = expenses.map(exp =>
-            exp.id === editId ? res.data : exp
-          );
-          setExpenses(updated);
-          resetForm();
+          // Recarregar despesas do mês
+          axios.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
+            .then(res => {
+              if (Array.isArray(res.data)) {
+                setExpenses(res.data);
+              }
+              resetForm();
+            })
+            .catch(err => console.error(err));
         })
         .catch(err => console.error(err));
     } else {
       // Adicionar novo gasto
       axios.post(`${API_URL}/expenses`, newExpense)
         .then(res => {
-          setExpenses([...expenses, res.data]); // objeto do gasto com id
-          resetForm();
+          // Recarregar despesas do mês
+          axios.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
+            .then(res => {
+              if (Array.isArray(res.data)) {
+                setExpenses(res.data);
+              }
+              resetForm();
+            })
+            .catch(err => console.error(err));
         })
         .catch(err => console.error(err));
     }
@@ -68,8 +83,14 @@ function App() {
   const removeExpense = (id) => {
     axios.delete(`${API_URL}/expenses/${id}`)
       .then(() => {
-        const newExpenses = expenses.filter(exp => exp.id !== id);
-        setExpenses(newExpenses);
+        // Recarregar despesas do mês
+        axios.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
+          .then(res => {
+            if (Array.isArray(res.data)) {
+              setExpenses(res.data);
+            }
+          })
+          .catch(err => console.error(err));
       })
       .catch(err => console.error(err));
   };
@@ -148,6 +169,34 @@ function App() {
             <button type="submit">Pesquisar</button>
           </div>
 
+          {/* Filtro de Mês */}
+          <div className='month_filter' style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '5px' }}>
+            <h3>Filtrar por Mês</h3>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <select 
+                value={selectedMonth} 
+                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                style={{ padding: '8px', borderRadius: '4px' }}
+              >
+                {[...Array(12)].map((_, i) => {
+                  const monthDate = new Date(selectedYear, i, 1);
+                  const monthName = monthDate.toLocaleDateString('pt-BR', { month: 'long' });
+                  return <option key={i + 1} value={i + 1}>{monthName}</option>;
+                })}
+              </select>
+              <select 
+                value={selectedYear} 
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                style={{ padding: '8px', borderRadius: '4px' }}
+              >
+                {[...Array(5)].map((_, i) => {
+                  const year = new Date().getFullYear() - 2 + i;
+                  return <option key={year} value={year}>{year}</option>;
+                })}
+              </select>
+            </div>
+          </div>
+
           <div>
             <div>
               <input
@@ -218,20 +267,25 @@ function App() {
                 </tr>
               </thead>
               <tbody>
-                {expenses.map((exp) => (
-                  <tr key={exp.id}>
-                    <td>{exp.service}</td>
-                    <td>R${exp.price}</td>
-                    <td>{exp.paymentMethod}</td>
-                    <td>{exp.numberTimes}x</td>
-                    <td>{exp.dueDate}</td>
-                    <td>{exp.created_at ? new Date(exp.created_at).toLocaleString() : "-"}</td>
-                    <td>
-                      <button onClick={() => startEditExpense(exp)} title="Editar">✏️</button>
-                      <button onClick={() => removeExpense(exp.id)} title="Remover">❌</button>
-                    </td>
-                  </tr>
-                ))}
+                {expenses.map((exp) => {
+                  // Mostrar apenas parcelas principais (parent_id === null)
+                  if (exp.parent_id) return null;
+                  
+                  return (
+                    <tr key={exp.id}>
+                      <td>{exp.service}</td>
+                      <td>R${exp.price}</td>
+                      <td>{exp.paymentMethod}</td>
+                      <td>{exp.installment_number}/{exp.numberTimes}x</td>
+                      <td>{exp.dueDate}</td>
+                      <td>{exp.created_at ? new Date(exp.created_at).toLocaleString() : "-"}</td>
+                      <td>
+                        <button onClick={() => startEditExpense(exp)} title="Editar">✏️</button>
+                        <button onClick={() => removeExpense(exp.id)} title="Remover">❌</button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
 
