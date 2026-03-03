@@ -3,7 +3,15 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { LogoIcon, HomeIcon, PlanilhaIcon, EconomiasIcon, DolarIcon, ViagensIcon, ConfigIcon } from './components/icons/Icons.jsx'
 
+/**
+ * App component
+ * @param {Object} props - Props object
+ * @returns {ReactElement} - JSX element
+ */
 function App() {
+  /**
+   * States para armazenar valores de inputs
+   */
   const [paymentMethod, setPaymentMethod] = useState('credit_card');
   const [numberTimes, setNumberTimes] = useState('1');
   const [service, setService] = useState('');
@@ -12,21 +20,36 @@ function App() {
   const [expenses, setExpenses] = useState([]);
   const [editId, setEditId] = useState(null); // agora guardamos o id do banco
 
-  // Estados para filtro de mês
+  /**
+   * Estados para filtro de mês
+   */
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // controlar qual app está aberto usando state em vez de manipular o DOM
+  /**
+   * Estado para controlar qual app está aberto
+   */
   const [activeApp, setActiveApp] = useState('home');
 
+  /**
+   * Função para mostrar qual app está aberto
+   * @param {String} appName - Nome do app a ser aberto
+   */
+  /**
+   * Função para mostrar qual app está aberto
+   * @param {String} appName - Nome do app a ser aberto
+   * @example showApp('home') // Mostra o app "home"
+   */
   const showApp = (appName) => {
+    // Altera o estado para mostrar o app com o nome especificado
     setActiveApp(appName);
   };
 
-
-  // Buscar gastos do mês ao carregar ou mudar mês
+  /**
+   * Função para buscar gastos do mês ao carregar ou mudar mês
+   */
   useEffect(() => {
     axios.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
       .then(res => {
@@ -40,10 +63,37 @@ function App() {
       .catch(err => console.error(err));
   }, [API_URL, selectedMonth, selectedYear]);
 
+  /**
+   * Função para tratar mudanças em select de forma de pagamento
+   * @param {Event} event - Evento de mudanças em select
+   */
+  /**
+   * Função para tratar mudanças em select de forma de pagamento
+   * @param {Event} event - Evento de mudanças em select
+   * @example <select onChange={handlePaymentMethodChange}>
+   *   <option value="credit_card">Cartão de Crédito</option>
+   *   <option value="debit_card">Cartão de Débito</option>
+   *   <option value="cash">Dinheiro</option>
+   * </select>
+   */
   const handlePaymentMethodChange = (event) => {
+    // Atualizar estado com o valor selecionado
     setPaymentMethod(event.target.value);
-  }
+  };
 
+  /**
+   * Função para adicionar novo gasto
+   */
+  /**
+   * Função para adicionar novo gasto ou atualizar um gasto existente
+   *
+   * Se o estado `editId` for diferente de `null`, atualizar o gasto com o ID
+   * especificado. Caso contrário, adicionar um novo gasto com os dados do estado
+   * `newExpense`.
+   *
+   * Após adicionar ou atualizar o gasto, recarregar a lista de despesas do mês atual
+   * com a API e atualizar o estado `expenses` com a lista de despesas.
+   */
   const addExpense = () => {
     const newExpense = { service, price, dueDate, paymentMethod, numberTimes };
 
@@ -57,6 +107,7 @@ function App() {
               if (Array.isArray(res.data)) {
                 setExpenses(res.data);
               }
+              // Resetar o formulário e o estado `editId`
               resetForm();
             })
             .catch(err => console.error(err));
@@ -72,21 +123,32 @@ function App() {
               if (Array.isArray(res.data)) {
                 setExpenses(res.data);
               }
+              // Resetar o formulário e o estado `editId`
               resetForm();
             })
             .catch(err => console.error(err));
         })
         .catch(err => console.error(err));
     }
-  };
 
+  /**
+   * Função para remover um gasto
+   * @param {Number} id - ID do gasto a ser removido
+   */
+  /**
+   * Função para remover um gasto
+   * @param {Number} id - ID do gasto a ser removido
+   * @returns {Promise<void>} - Promise com resultado da remoção
+   */
   const removeExpense = (id) => {
+    // Realizar requisição DELETE para remover o gasto
     axios.delete(`${API_URL}/expenses/${id}`)
       .then(() => {
         // Recarregar despesas do mês
         axios.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
           .then(res => {
             if (Array.isArray(res.data)) {
+              // Atualizar estado com as despesas do mês
               setExpenses(res.data);
             }
           })
@@ -95,21 +157,63 @@ function App() {
       .catch(err => console.error(err));
   };
 
+  /**
+   * Função para iniciar edição de um gasto
+   * @param {Object} exp - Gasto a ser editado
+   */
+  /**
+   * Função para iniciar edição de um gasto
+   * @param {Object} exp - Gasto a ser editado
+   * @returns {void} - Nenhum valor de retorno
+   */
+  /**
+   * Função para iniciar edição de um gasto.
+   * Esta função é chamada quando o usuário clica em um gasto para editá-lo.
+   * Ela irá preencher os campos do formulário com os valores do gasto.
+   * Além disso, ela irá armazenar o ID do gasto no estado `editId`.
+   * @param {Object} exp - Gasto a ser editado
+   * @returns {void} - Nenhum valor de retorno
+   */
+  /**
+   * Função para iniciar edição de um gasto
+   * Esta função é chamada quando o usuário clica em um gasto para editá-lo.
+   * Ela irá preencher os campos do formulário com os valores do gasto.
+   * Além disso, ela irá armazenar o ID do gasto no estado `editId`.
+   * @param {Object} exp - Gasto a ser editado
+   * @returns {void} - Nenhum valor de retorno
+   */
   const startEditExpense = (exp) => {
-    setService(exp.service);
-    setPrice(exp.price);
-    setDueDate(exp.dueDate);
-    setPaymentMethod(exp.paymentMethod);
-    setNumberTimes(exp.numberTimes);
-    setEditId(exp.id); // guardamos o id do banco
-  };
+    // Preencher os campos do formulário com os valores do gasto
+    setService(exp.service); // Preencher o campo service com o valor do gasto
+    setPrice(exp.price); // Preencher o campo price com o valor do gasto
+    setDueDate(exp.dueDate); // Preencher o campo dueDate com o valor do gasto
+    setPaymentMethod(exp.paymentMethod); // Preencher o campo paymentMethod com o valor do gasto
+    setNumberTimes(exp.numberTimes); // Preencher o campo numberTimes com o valor do gasto
+    // Guardar o ID do gasto no estado `editId`
+    setEditId(exp.id); // Guardar o ID do gasto no estado `editId`
 
+  /**
+   * Função para resetar os campos do formulário
+   */
+  /**
+   * Função para resetar os campos do formulário
+   * Esta função é chamada quando o usuário deseja cancelar a edição de um gasto
+   * ou quando ele deseja adicionar um novo gasto.
+   * Ela irá resetar os campos do formulário com os valores padrão.
+   * @returns {void} - Nenhum valor de retorno
+   */
   const resetForm = () => {
+    // Resetar o campo service com o valor padrão (vazio)
     setService('');
+    // Resetar o campo price com o valor padrão (vazio)
     setPrice('');
+    // Resetar o campo dueDate com o valor padrão (vazio)
     setDueDate('');
+    // Resetar o campo paymentMethod com o valor padrão (credit_card)
     setPaymentMethod('credit_card');
+    // Resetar o campo numberTimes com o valor padrão (1)
     setNumberTimes('1');
+    // Resetar o estado editId com o valor padrão (null)
     setEditId(null);
   };
 
