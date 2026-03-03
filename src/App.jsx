@@ -276,7 +276,7 @@ function App() {
                       <td>{exp.service}</td>
                       <td>R${exp.price}</td>
                       <td>{exp.paymentMethod}</td>
-                      <td>{exp.installment_number || 1} de {exp.numberTimes}</td>
+                      <td>{exp.installment_number || 1}/{exp.numberTimes}x</td>
                       <td>{exp.dueDate}</td>
                       <td>{exp.created_at || "-"}</td>
                       <td>
