@@ -1,32 +1,31 @@
-import './App.css'
-import { useState, useEffect } from 'react'
-import axios from 'axios'
-import { LogoIcon, HomeIcon, PlanilhaIcon, EconomiasIcon, DolarIcon, ViagensIcon, ConfigIcon } from './components/icons/Icons.jsx'
+import './App.css';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { LogoIcon, HomeIcon, PlanilhaIcon, EconomiasIcon, DolarIcon, ViagensIcon, ConfigIcon } from './components/icons/Icons.jsx';
 
 function App() {
-  const [paymentMethod, setPaymentMethod] = useState('credit_card');
-  const [numberTimes, setNumberTimes] = useState('1');
+  // ---------------- ESTADOS ---------------- //
   const [service, setService] = useState('');
   const [price, setPrice] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [expenses, setExpenses] = useState([]);
-  const [editId, setEditId] = useState(null); // agora guardamos o id do banco
+  const [paymentMethod, setPaymentMethod] = useState('credit_card');
+  const [numberTimes, setNumberTimes] = useState('1');
+  const [editId, setEditId] = useState(null);
 
-  // Estados para filtro de mês
+  const [expenses, setExpenses] = useState([]); // lista de parcelas do mês
+
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // controlar qual app está aberto usando state em vez de manipular o DOM
-  const [activeApp, setActiveApp] = useState('home');
+  const [activeApp, setActiveApp] = useState('home'); // controle de navegação lateral
 
-  const showApp = (appName) => {
-    setActiveApp(appName);
-  };
+  const showApp = (appName) => setActiveApp(appName);
 
+  // ---------------- FUNÇÕES ---------------- //
 
-  // Buscar gastos do mês ao carregar ou mudar mês
+  // Buscar parcelas do mês
   useEffect(() => {
     axios.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
       .then(res => {
@@ -40,78 +39,60 @@ function App() {
       .catch(err => console.error(err));
   }, [API_URL, selectedMonth, selectedYear]);
 
-  const handlePaymentMethodChange = (event) => {
-    setPaymentMethod(event.target.value);
-  }
+  const handlePaymentMethodChange = (event) => setPaymentMethod(event.target.value);
 
+  // Adicionar ou editar despesa
   const addExpense = () => {
     const newExpense = { service, price, dueDate, paymentMethod, numberTimes };
 
     if (editId !== null) {
-      // Atualizar gasto existente
       axios.put(`${API_URL}/expenses/${editId}`, newExpense)
-        .then(res => {
-          // Recarregar despesas do mês
-          axios.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
-            .then(res => {
-              if (Array.isArray(res.data)) {
-                setExpenses(res.data);
-              }
-              resetForm();
-            })
-            .catch(err => console.error(err));
-        })
+        .then(() => reloadMonth())
         .catch(err => console.error(err));
     } else {
-      // Adicionar novo gasto
       axios.post(`${API_URL}/expenses`, newExpense)
-        .then(res => {
-          // Recarregar despesas do mês
-          axios.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
-            .then(res => {
-              if (Array.isArray(res.data)) {
-                setExpenses(res.data);
-              }
-              resetForm();
-            })
-            .catch(err => console.error(err));
-        })
+        .then(() => reloadMonth())
         .catch(err => console.error(err));
     }
   };
 
-  const removeExpense = (id) => {
-    axios.delete(`${API_URL}/expenses/${id}`)
-      .then(() => {
-        // Recarregar despesas do mês
-        axios.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
-          .then(res => {
-            if (Array.isArray(res.data)) {
-              setExpenses(res.data);
-            }
-          })
-          .catch(err => console.error(err));
+  // Recarregar parcelas do mês
+  const reloadMonth = () => {
+    axios.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
+      .then(res => {
+        if (Array.isArray(res.data)) {
+          setExpenses(res.data);
+        }
+        resetForm();
       })
       .catch(err => console.error(err));
   };
 
+  // Remover despesa
+  const removeExpense = (id) => {
+    axios.delete(`${API_URL}/expenses/${id}`)
+      .then(() => reloadMonth())
+      .catch(err => console.error(err));
+  };
+
+  // Preparar edição
   const startEditExpense = (exp) => {
     setService(exp.service);
-    setPrice(exp.price);
+    setPrice(exp.amount * exp.numberTimes); // valor total da compra
     setDueDate(exp.dueDate);
     setPaymentMethod(exp.paymentMethod);
     setNumberTimes(exp.numberTimes);
-    setEditId(exp.id); // guardamos o id do banco
+    setEditId(exp.expense_id); // id da compra principal
   };
 
+  // Resetar formulário
   const resetForm = () => {
     setService('');
     setPrice('');
     setDueDate('');
     setPaymentMethod('credit_card');
     setNumberTimes('1');
-    setEditId(null);
-  };
+
 
   return (
     <div className='app_container'>
@@ -314,5 +295,5 @@ function App() {
     </div>
   )
 }
-
+}
 export default App
