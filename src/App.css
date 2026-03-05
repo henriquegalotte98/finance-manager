@@ -1,330 +1,35 @@
-* {
-  margin: 0;
-  padding: 0;
-}
-
-
-body {
-  margin: 0;
-  padding: 0px;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-direction: column;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #10403B;
-
-
-}
-
-.app_container {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start baseline;
-  justify-content: baseline;
-  min-width: 400px;
-  height: auto;
-  padding: 0px;
-  background-color: tomato;
-
-}
-
-.side_menu_container {
-  display: flex;
-  flex-direction: column;
-  align-items: baseline;
-  justify-content: baseline;
-  padding: 0px;
-  height: 848.98px;
-  background-color: purple;
-}
-
-.app {
-  margin: 0px;
-  padding: 0px;
-  display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  justify-content: space-around;
-  min-width: 330px;
-  height: 848.98px;
-  background-color: rgb(61, 47, 255);
-  border-radius: 15px 15px 15px 15px;
-}
-
-
-.logo {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  width: 80px;
-  height: 80px;
-  margin: 0px;
-  padding-left: 5px;
-
-  border-radius: 15px 0px 0px 0px;
-}
-
-.logo li {
-  width: 50px;
-  height: 50px;
-  margin: 0;
-  padding-left: 10px;
-}
-
-.app_name {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  width: 200px;
-  height: 80px;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  padding-left: 10px;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.app_name p {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-
-}
-
-.side_header {
-  display: flex;
-  flex-direction: column;
-  align-items: baseline;
-  justify-content: baseline;
-  width: 80px;
-  border-radius: 11px 0px 0px 0px;
-  margin-left: 0px;
-  padding: 0px;
-  background-color: #005C53;
-  box-shadow: 4px 0px 0px 0px rgba(0, 0, 0, 0.185), inset 0px 0px 5px rgba(0, 0, 0, 0.4);
-  color: white;
-  font-weight: 500;
-
-
-}
-
-.side_header:hover {
-
-  width: 150px;
-  transition: 0.4s ease-in-out;
-
-  .user_info {
-    width: 150px;
-  }
-
-
-  .app_name {
-    display: flex;
-    transition: opacity 1.0s ease-in-out;
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .div_btn_logout {
-    display: flex;
-    transition: opacity 1.0s ease-in-out;
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-}
-
-.user_info {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  width: 80px;
-  height: 137px;
-  margin: 0px;
-  padding-left: 5px;
-
-}
-
-.div_btn_logout {
-  display: flex;
-  flex-direction: column;
-  align-items: end;
-  justify-content: space-between;
-  width: 200px;
-  height: 137px;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  padding-right: 10px;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.div_btn_logout li {
-
-  margin: 0;
-  padding: 20px 0px;
-
-}
-
-.btn_logout,
-.div_btn_logout img {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  background-color: #127369;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.user_avatar {
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  background-color: white;
-  margin-top: 10px;
-  box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.5);
-}
-
-
-.icons {
-  width: 50px;
-  height: 50px;
-}
-
-li {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-around;
-
-  list-style: none;
-  margin: 0px;
-  padding: 30px 0px 30px 15px;
-
-}
-
-.side_menu menu {
-  display: flex;
-  flex-direction: column;
-  align-items: baseline;
-  justify-content: space-around;
-  padding-left: 0;
-  margin: 0;
-  width: 550px;
-}
-
-.subtitle_icons {
-  display: flex;
-  align-items: baseline;
-  font-size: 14px;
-  color: white;
-  white-space: nowrap;
-  flex-direction: column;
-  justify-content: space-around;
-  align-items: flex-start;
-  margin: 0;
-  padding: 0;
-  opacity: 0;
-  transition: opacity 0.05s ease-out;
-  height: 632px;
-  pointer-events: none;
-
-
-
-}
-
-.side_menu {
-  display: flex;
-  flex-direction: row;
-
-  justify-content: left;
-  width: 80px;
-  height: 827.5px;
-  margin: 0;
-  background-color: #bcc71f;
-  border-radius: 0px 0px 15px 0px;
-  box-shadow: 4px 0px 0px 0px rgba(0, 0, 0, 0.185);
-  transition: 0.4s ease-out;
-
-}
-
-
-.side_menu:hover {
-  width: 150px;
-  transition: 0.4s ease-in-out;
-
-  .subtitle_icons {
-    transition: opacity 0.7s ease-in;
-    opacity: 1;
-    pointer-events: auto; /* allow clicks when sidebar expanded */
-  }
-}
-
-
-/* Estilização do app */
-
-.excel_header{
-
-  margin: 20px 0px;
-
-
-}
-
-
-.number_times{
-  display: inline-block;
-}
-.div_separate{
-  width: 100%;
-  height: 1px;
-  background-color: white;
-  margin: 10px 0px;
-}
-
-.expense_item{
-  display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  justify-content: space-between;
-  border-bottom: #bcc71f 1px solid;
-  padding: 0px 10px;
-}
-.expense_actions{
-  display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-}
+/* Tabela de gastos */
 .expenses_table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
+  background-color: #fff; /* fundo branco para contraste */
+  border-radius: 8px;
+  overflow: hidden; /* arredondar bordas da tabela */
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.2); /* sombra leve */
 }
 
 .expenses_table th, .expenses_table td {
   border: 1px solid #ddd;
-  padding: 8px;
+  padding: 12px;
   text-align: center;
+  font-size: 14px;
 }
 
 .expenses_table th {
-  background-color: #f4f4f4;
+  background-color: #127369; /* verde escuro para cabeçalho */
+  color: white;
   font-weight: bold;
+  text-transform: uppercase;
+}
+
+.expenses_table tr:nth-child(even) {
+  background-color: #f9f9f9; /* zebra alternada */
+}
+
+.expenses_table tr:hover {
+  background-color: #e6f7f4; /* destaque ao passar o mouse */
+  transition: 0.3s ease;
 }
 
 .expenses_table button {
@@ -333,4 +38,57 @@ li {
   cursor: pointer;
   font-size: 18px;
   margin: 0 5px;
+  transition: transform 0.2s ease;
+}
+
+.expenses_table button:hover {
+  transform: scale(1.2); /* efeito de zoom nos botões */
+}
+
+/* Botões principais */
+.btn_add, .btn_remove {
+  padding: 8px 12px;
+  margin: 5px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn_add {
+  background-color: #127369;
+  color: white;
+}
+
+.btn_add:hover {
+  background-color: #0f5a58;
+}
+
+.btn_remove {
+  background-color: #ccc;
+  color: #333;
+}
+
+.btn_remove:hover {
+  background-color: #999;
+  color: white;
+}
+
+/* Filtro de mês */
+.month_filter {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.month_filter h3 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.month_filter select {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
 }
