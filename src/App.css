@@ -1,19 +1,12 @@
-/* Container principal */
-.app_container {
-  display: flex;
-  flex-direction: row;
-  min-height: 100vh; /* ocupa toda a altura da tela */
-  width: 100%;
-}
-
-/* Menu lateral */
+/* Barra lateral compacta */
 .side_menu_container {
   display: flex;
   flex-direction: column;
-  width: 80px; /* largura inicial compacta */
+  width: 80px; /* largura inicial */
   background-color: #005C53;
   transition: width 0.3s ease-in-out;
-  overflow: hidden; /* evita que textos fiquem visíveis quando fechado */
+  min-height: 100vh; /* ocupa toda a altura da tela */
+  overflow: hidden;
 }
 
 /* Expande ao passar o mouse */
@@ -31,26 +24,32 @@
   color: white;
 }
 
-/* Logo */
-.logo {
+/* Ícones */
+.side_menu menu li {
+  list-style: none;
+  margin: 15px 0;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
-  cursor: pointer;
+  justify-content: center;
 }
 
-.logo li {
-  width: 40px; /* tamanho fixo para ícones */
-  height: 40px;
+.side_menu menu li svg {
+  width: 28px; /* tamanho fixo para ícones */
+  height: 28px;
+  fill: white; /* cor dos ícones */
 }
 
-.app_name {
+/* Subtítulos */
+.subtitle_icons {
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
-  white-space: nowrap;
+  font-size: 14px;
+  color: white;
+  margin-left: 10px;
 }
 
-.side_menu_container:hover .app_name {
+.side_menu_container:hover .subtitle_icons {
   opacity: 1;
 }
 
@@ -61,46 +60,4 @@
   border-radius: 50%;
   margin-top: 10px;
   background-color: white;
-}
-
-/* Menu lateral */
-.side_menu {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 10px;
-  background-color: #bcc71f;
-  flex-grow: 1;
-}
-
-.side_menu menu li {
-  list-style: none;
-  margin: 15px 0;
-  cursor: pointer;
-}
-
-.side_menu menu li svg {
-  width: 24px; /* tamanho fixo para ícones */
-  height: 24px;
-}
-
-/* Subtítulos */
-.subtitle_icons {
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
-  font-size: 14px;
-  color: white;
-}
-
-.side_menu_container:hover .subtitle_icons {
-  opacity: 1;
-}
-
-/* Área principal */
-.app {
-  flex-grow: 1;
-  padding: 20px;
-  background-color: rgb(61, 47, 255);
-  border-radius: 15px;
-  overflow-y: auto;
 }
