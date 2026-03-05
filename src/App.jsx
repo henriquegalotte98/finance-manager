@@ -92,10 +92,13 @@ function App() {
     setDueDate('');
     setPaymentMethod('credit_card');
     setNumberTimes('1');
+    setEditId(null);
+  };
 
-
+  // ---------------- RENDERIZAÇÃO ---------------- //
   return (
     <div className='app_container'>
+      {/* Menu lateral */}
       <div className='side_menu_container'>
         <div className='side_header'>
           <div className='logo' onClick={() => showApp('home')}>
@@ -135,29 +138,24 @@ function App() {
         </div>
       </div>
 
+      {/* Conteúdo principal */}
       <div className='app'>
 
+        {/* Tela Home */}
         <div id="home" className='home' style={{ display: activeApp === 'home' ? 'block' : 'none' }}>
           <h1>Bem-vindo ao seu app de finanças pessoais!</h1>
           <p>Use a barra lateral para navegar entre os aplicativos.</p>
         </div>
 
+        {/* Tela Excel (Planilha de gastos) */}
         <div id="excel" className='excel' style={{ display: activeApp === 'excel' ? 'block' : 'none' }}>
-          <div className='excel_header'>
-            <search>
-              <input type="text" placeholder='Pesquisar...' className='search_input' />
-            </search>
-            <button type="submit">Pesquisar</button>
-          </div>
-
-          {/* Filtro de Mês */}
-          <div className='month_filter' style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '5px' }}>
+          {/* Filtro de mês */}
+          <div className='month_filter'>
             <h3>Filtrar por Mês</h3>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
               <select 
                 value={selectedMonth} 
                 onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                style={{ padding: '8px', borderRadius: '4px' }}
               >
                 {[...Array(12)].map((_, i) => {
                   const monthDate = new Date(selectedYear, i, 1);
@@ -168,7 +166,6 @@ function App() {
               <select 
                 value={selectedYear} 
                 onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                style={{ padding: '8px', borderRadius: '4px' }}
               >
                 {[...Array(5)].map((_, i) => {
                   const year = new Date().getFullYear() - 2 + i;
@@ -178,122 +175,84 @@ function App() {
             </div>
           </div>
 
+          {/* Formulário de cadastro */}
           <div>
-            <div>
-              <input
-                type="text"
-                placeholder='Conta ou serviço'
-                value={service}
-                onChange={(e) => setService(e.target.value)}
-              />
-              <input
-                type="number"
-                placeholder='Preço'
-                style={{ width: '100px' }}
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-              />
-              <input
-                type="date"
-                placeholder='Data do vencimento'
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-              />
+            <input type="text" placeholder='Conta ou serviço' value={service} onChange={(e) => setService(e.target.value)} />
+            <input type="number" placeholder='Preço' value={price} onChange={(e) => setPrice(e.target.value)} />
+            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
 
-              <select
-                name="payment_method"
-                id="payment_method"
-                className='payment_method'
-                value={paymentMethod}
-                onChange={handlePaymentMethodChange}
-              >
-                <option value="credit_card">Cartão de Crédito</option>
-                <option value="debit_card">Cartão de Débito</option>
-                <option value="bank_transfer">Transferência Bancária</option>
-                <option value="cash">Dinheiro</option>
-                <option value="credit_store">Crediário</option>
+            <select value={paymentMethod} onChange={handlePaymentMethodChange}>
+              <option value="credit_card">Cartão de Crédito</option>
+              <option value="debit_card">Cartão de Débito</option>
+              <option value="bank_transfer">Transferência Bancária</option>
+              <option value="cash">Dinheiro</option>
+              <option value="credit_store">Crediário</option>
+            </select>
+
+            {(paymentMethod === 'credit_card' || paymentMethod === 'credit_store') && (
+              <select value={numberTimes} onChange={(e) => setNumberTimes(e.target.value)}>
+                {[...Array(12)].map((_, i) => (
+                  <option key={i + 1} value={i + 1}>{i + 1}x</option>
+                ))}
               </select>
+            )}
 
-              {(paymentMethod === 'credit_card' || paymentMethod === 'credit_store') && (
-                <select
-                  name="number_times"
-                  id="number_times"
-                  className='number_times'
-                  value={numberTimes}
-                  onChange={(e) => setNumberTimes(e.target.value)}
-                >
-                  {[...Array(12)].map((_, i) => (
-                    <option key={i + 1} value={i + 1}>{i + 1}x</option>
-                  ))}
-                </select>
-              )}
-
-              <button className='btn_add' onClick={addExpense}>
-                {editId !== null ? "Salvar edição" : "Adicionar"}
-              </button>
-              <button className='btn_remove' onClick={resetForm}>Cancelar</button>
-            </div>
-
-            <h3>📊 Lista de gastos</h3>
-            <table className="expenses_table">
-              <thead>
-                <tr>
-                  <th>Serviço</th>
-                  <th>Preço</th>
-                  <th>Forma de Pagamento</th>
-                  <th>Parcelas</th>
-                  <th>Vencimento</th>
-                  <th>Registrado em</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {expenses.map((exp) => {
-                  // Mostrar apenas parcelas principais (parent_id === null)
-                  if (exp.parent_id) return null;
-                  
-                  return (
-                    <tr key={exp.id}>
-                      <td>{exp.service}</td>
-                      <td>R${exp.price}</td>
-                      <td>{exp.paymentMethod}</td>
-                      <td>{exp.installment_number || 1} de {exp.numberTimes}</td>
-                      <td>{exp.dueDate}</td>
-                      <td>{exp.created_at || "-"}</td>
-                      <td>
-                        <button onClick={() => startEditExpense(exp)} title="Editar">✏️</button>
-                        <button onClick={() => removeExpense(exp.id)} title="Remover">❌</button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-
+            <button onClick={addExpense}>{editId !== null ? "Salvar edição" : "Adicionar"}</button>
+            <button onClick={resetForm}>Cancelar</button>
           </div>
+
+          {/* Lista de gastos */}
+          <h3>📊 Lista de gastos</h3>
+          <table className="expenses_table">
+            <thead>
+              <tr>
+                <th>Serviço</th>
+                <th>Valor da Parcela</th>
+                <th>Forma de Pagamento</th>
+                <th>Parcela</th>
+                <th>Vencimento</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {expenses.map((exp) => (
+                <tr key={exp.id}>
+                  <td>{exp.service}</td>
+                  <td>R${exp.amount}</td>
+                  <td>{exp.paymentmethod}</td>
+                  <td>{exp.installment_number} de {exp.numbertimes}</td>
+                  <td>{new Date(exp.duedate).toLocaleDateString('pt-BR')}</td>
+                  <td>
+                    <button onClick={() => startEditExpense(exp)} title="Editar">✏️</button>
+                    <button onClick={() => removeExpense(exp.expense_id)} title="Remover">❌</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-
-
+        {/* Tela Economias */}
         <div id="economias" className='economias' style={{ display: activeApp === 'economias' ? 'block' : 'none' }}>
           <h2>App de Economias</h2>
+          <p>Aqui você poderá registrar suas economias futuras.</p>
         </div>
 
+        {/* Tela Dólar */}
         <div id="dolar" className='dolar' style={{ display: activeApp === 'dolar' ? 'block' : 'none' }}>
           <h2>App de Dólar</h2>
+          <p>Acompanhe a cotação do dólar e registre compras internacionais.</p>
         </div>
 
+        {/* Tela Viagens */}
         <div id="viagens" className='viagens' style={{ display: activeApp === 'viagens' ? 'block' : 'none' }}>
           <h2>App de Viagens</h2>
+          <p>Planeje suas viagens e registre os gastos relacionados.</p>
         </div>
-
-
-
-
 
       </div>
     </div>
   )
 }
-}
-export default App
+
+export default App;
