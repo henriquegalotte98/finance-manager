@@ -11,6 +11,7 @@ function App() {
   const [paymentMethod, setPaymentMethod] = useState('credit_card');
   const [numberTimes, setNumberTimes] = useState('1');
   const [editId, setEditId] = useState(null);
+  const [recurrence,setRecurrence] = useState([])
 
   const [expenses, setExpenses] = useState([]); // lista de parcelas do mês
 
@@ -153,8 +154,8 @@ function App() {
           <div className='month_filter'>
             <h3>Filtrar por Mês</h3>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <select 
-                value={selectedMonth} 
+              <select
+                value={selectedMonth}
                 onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
               >
                 {[...Array(12)].map((_, i) => {
@@ -163,8 +164,8 @@ function App() {
                   return <option key={i + 1} value={i + 1}>{monthName}</option>;
                 })}
               </select>
-              <select 
-                value={selectedYear} 
+              <select
+                value={selectedYear}
                 onChange={(e) => setSelectedYear(parseInt(e.target.value))}
               >
                 {[...Array(5)].map((_, i) => {
@@ -188,6 +189,7 @@ function App() {
               <option value="cash">Dinheiro</option>
               <option value="credit_store">Crediário</option>
             </select>
+            
 
             {(paymentMethod === 'credit_card' || paymentMethod === 'credit_store') && (
               <select value={numberTimes} onChange={(e) => setNumberTimes(e.target.value)}>
@@ -196,7 +198,13 @@ function App() {
                 ))}
               </select>
             )}
-
+            
+            <select value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
+              <option value="none">Sem recorrência</option>
+              <option value="monthly">Mensal</option>
+              <option value="yearly">Anual</option>
+              <option value="weekly">Semanal</option>
+            </select>
             <button onClick={addExpense}>{editId !== null ? "Salvar edição" : "Adicionar"}</button>
             <button onClick={resetForm}>Cancelar</button>
           </div>
@@ -220,7 +228,7 @@ function App() {
                   <td>{exp.service}</td>
                   <td>R${exp.amount}</td>
                   <td>{exp.paymentmethod}</td>
-                  <td>{exp.installment_number} de {exp.numbertimes}</td> 
+                  <td>{exp.installment_number} de {exp.numbertimes}</td>
                   <td>{new Date(exp.duedate).toLocaleDateString('pt-BR')}</td>
                   <td>
                     <button onClick={() => startEditExpense(exp)} title="Editar">✏️</button>
