@@ -220,7 +220,7 @@ function App() {
                   <td>{exp.service}</td>
                   <td>R${exp.amount}</td>
                   <td>{exp.paymentmethod}</td>
-                  <td>{exp.installment_number} de {exp.numbertimes}</td>
+                  <td>{exp.installment_number} de {exp.numbertimes}</td> 
                   <td>{new Date(exp.duedate).toLocaleDateString('pt-BR')}</td>
                   <td>
                     <button onClick={() => startEditExpense(exp)} title="Editar">✏️</button>
