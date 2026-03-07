@@ -14,7 +14,7 @@ body {
   justify-content: space-between;
   flex-direction: column;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #10403B;
+  background-color: #FAFAFA;
 
 
 }
@@ -27,7 +27,7 @@ body {
   min-width: 400px;
   height: auto;
   padding: 0px;
-  background-color: tomato;
+  background-color: transparent;
 
 }
 
@@ -39,7 +39,7 @@ body {
   padding: 0px;
   margin-right: 10px;
   height: 100vh;
-  background-color: purple;
+  background-color: transparent;
 }
 
 
@@ -96,7 +96,7 @@ body {
   border-radius: 11px 0px 0px 0px;
   margin-left: 0px;
   padding: 0px;
-  background-color: #005C53;
+  background-color: orangered;
   box-shadow: 4px 0px 0px 0px rgba(0, 0, 0, 0.185), inset 0px 0px 5px rgba(0, 0, 0, 0.4);
   color: white;
   font-weight: 500;
@@ -245,7 +245,7 @@ li {
   width: 80px;
   height: 827.5px;
   margin: 0;
-  background-color: #bcc71f;
+  background-color: #878787b9;
   border-radius: 0px 0px 15px 0px;
   box-shadow: 4px 0px 0px 0px rgba(0, 0, 0, 0.185);
   transition: 0.4s ease-out;
@@ -304,19 +304,39 @@ li {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
+  color: black;
+  background-color: white;
+  border-radius: 20px;
 }
-
+.table_list{
+  background-color: transparent;
+  
+}
 .expenses_table th, .expenses_table td {
-  border: 1px solid #ddd;
+  
   padding: 8px;
   text-align: center;
+
+
 }
 
 .expenses_table th {
-  background-color: #f4f4f4;
+  background: transparent;
   font-weight: bold;
-}
+  
 
+  
+}
+.expenses_table tr{
+  background-color: transparent;
+  
+  
+}
+.expenses_table thead{
+  background-color: transparent;
+  
+  
+}
 .expenses_table button {
   background: none;
   border: none;
@@ -346,8 +366,10 @@ li {
 .app {
   flex-grow: 1;
   padding: 20px;
-  background-color: rgb(61, 47, 255);
+  background-color: #202022;
+  /*background: radial-gradient( rgba(201, 198, 198, 0.616),rgba(100, 100, 100, 0.425));*/
   border-radius: 15px;
   overflow-y: auto;
+  color: white;
 }
 

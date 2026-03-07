@@ -198,7 +198,7 @@ function App() {
                 ))}
               </select>
             )}
-            
+
             <select value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
               <option value="none">Sem recorrência</option>
               <option value="monthly">Mensal</option>
@@ -212,7 +212,7 @@ function App() {
           {/* Lista de gastos */}
           <h3>📊 Lista de gastos</h3>
           <table className="expenses_table">
-            <thead>
+            <thead > 
               <tr>
                 <th>Serviço</th>
                 <th>Valor da Parcela</th>
