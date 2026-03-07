@@ -70,14 +70,15 @@ app.get("/expenses/month/:year/:month", async (req, res) => {
   try {
     const { year, month } = req.params;
     const result = await pool.query(
-      `SELECT i.*, e.service, e.paymentMethod
-       FROM installments i
-       JOIN expenses e ON e.id = i.expense_id
-       WHERE EXTRACT(YEAR FROM i.dueDate) = $1
-         AND EXTRACT(MONTH FROM i.dueDate) = $2
-       ORDER BY i.dueDate`,
+      `SELECT i.*, e.service, e.paymentMethod, e.numberTimes
+   FROM installments i
+   JOIN expenses e ON e.id = i.expense_id
+   WHERE EXTRACT(YEAR FROM i.dueDate) = $1
+     AND EXTRACT(MONTH FROM i.dueDate) = $2
+   ORDER BY i.dueDate`,
       [year, month]
     );
+
     res.json(result.rows);
   } catch (err) {
     console.error("Erro SQL:", err.message); // <-- mostra o erro real
