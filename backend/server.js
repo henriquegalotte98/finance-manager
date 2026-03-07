@@ -80,9 +80,10 @@ app.get("/expenses/month/:year/:month", async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
+    console.error("Erro SQL:", err.message); // <-- mostra o erro real
     res.status(500).send("Erro ao buscar parcelas do mês");
   }
+
 });
 
 // Atualizar uma despesa (remove parcelas antigas e recria)
