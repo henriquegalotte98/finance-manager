@@ -328,7 +328,8 @@ li {
   
 }
 .expenses_table tr{
-  background-color: transparent;
+  background-color: white;
+  border-radius: 20px;
   
   
 }
