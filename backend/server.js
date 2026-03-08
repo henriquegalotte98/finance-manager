@@ -54,9 +54,23 @@ app.post("/expenses", async (req, res) => {
 
     const parcelaValor = price / numTimes;
 
-    for (let i = 0; i < numTimes; i++) {
+    // gerar parcelas dependendo da recorrência
+    let totalInstallments = numTimes;
 
-      const vencimento = addMonths(dueDate, i);
+    if (recurrence === "monthly") totalInstallments = 12;
+    if (recurrence === "weekly") totalInstallments = 52;
+    if (recurrence === "yearly") totalInstallments = 5;
+
+    for (let i = 0; i < totalInstallments; i++) {
+
+      let vencimento = new Date(dueDate);
+
+      if (recurrence === "monthly") vencimento.setMonth(vencimento.getMonth() + i);
+      else if (recurrence === "weekly") vencimento.setDate(vencimento.getDate() + (7 * i));
+      else if (recurrence === "yearly") vencimento.setFullYear(vencimento.getFullYear() + i);
+      else vencimento = addMonths(dueDate, i);
+
+      const formattedDate = new Date(vencimento).toISOString().split("T")[0];
 
       await pool.query(
 
@@ -64,7 +78,7 @@ app.post("/expenses", async (req, res) => {
         (expense_id, installment_number, amount, duedate)
         VALUES ($1,$2,$3,$4)`,
 
-        [expense.id, i + 1, parcelaValor, vencimento]
+        [expense.id, i + 1, parcelaValor, formattedDate]
 
       );
 
@@ -72,9 +86,7 @@ app.post("/expenses", async (req, res) => {
 
     res.json(expense);
 
-  }
-
-  catch (err) {
+  } catch (err) {
 
     console.error(err);
     res.status(500).send("Erro ao adicionar despesa");
