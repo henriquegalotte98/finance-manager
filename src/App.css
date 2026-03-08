@@ -387,3 +387,26 @@ li {
   color: white;
 }
 
+.dashboard_card{
+
+background:#2b2b2b;
+padding:20px;
+border-radius:12px;
+box-shadow:0 10px 30px rgba(0,0,0,0.4);
+transition:0.3s;
+
+}
+
+.dashboard_card:hover{
+
+transform:translateY(-5px)
+
+}
+
+.dashboard_grid{
+
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+
+}
