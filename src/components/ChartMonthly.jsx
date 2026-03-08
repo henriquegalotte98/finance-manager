@@ -4,31 +4,41 @@ import axios from "axios";
 
 export default function ChartMonthly({ API_URL }) {
 
-  const [data,setData] = useState(null)
+  const [data, setData] = useState(null);
 
-  useEffect(()=>{
+  useEffect(() => {
 
     axios.get(`${API_URL}/dashboard/monthly`)
-    .then(res=>{
+      .then(res => {
 
-      const labels = res.data.map(i=>i.month)
-      const values = res.data.map(i=>i.total)
+        if (!Array.isArray(res.data)) {
+          console.warn("Resposta inesperada:", res.data);
+          setData(null);
+          return;
+        }
 
-      setData({
-        labels,
-        datasets:[
-          {
-            label:"Gastos por mês",
-            data:values
-          }
-        ]
+        const labels = res.data.map(i => i.month);
+        const values = res.data.map(i => i.total);
+
+        setData({
+          labels,
+          datasets: [
+            {
+              label: "Gastos por mês",
+              data: values
+            }
+          ]
+        });
+
       })
+      .catch(err => {
+        console.error(err);
+        setData(null);
+      });
 
-    })
+  }, [API_URL]);
 
-  },[])
+  if (!data) return <p>Carregando gráfico...</p>;
 
-  if(!data) return <p>Carregando gráfico...</p>
-
-  return <Bar data={data}/>
+  return <Bar data={data} />;
 }

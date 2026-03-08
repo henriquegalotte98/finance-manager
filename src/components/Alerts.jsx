@@ -1,33 +1,48 @@
-import { useEffect,useState } from "react"
-import axios from "axios"
+import { useEffect, useState } from "react";
+import axios from "axios";
 
-export default function Alerts({API_URL}){
+export default function Alerts({ API_URL }) {
 
-const [alerts,setAlerts] = useState([])
+  const [alerts, setAlerts] = useState([]);
 
-useEffect(()=>{
+  useEffect(() => {
 
-axios.get(`${API_URL}/dashboard/alerts`)
-.then(res=> setAlerts(res.data))
+    axios.get(`${API_URL}/dashboard/alerts`)
+      .then(res => {
 
-},[])
+        if (Array.isArray(res.data)) {
+          setAlerts(res.data);
+        } else {
+          setAlerts([]);
+        }
 
-if(alerts.length===0) return null
+      })
+      .catch(err => {
+        console.error(err);
+        setAlerts([]);
+      });
 
-return(
+  }, [API_URL]);
 
-<div className="alerts">
+  if (!alerts.length) {
+    return <p>Nenhuma conta vencendo</p>;
+  }
 
-<h3>⚠ Contas vencendo</h3>
+  return (
 
-{alerts.map((a,i)=>(
-<div key={i}>
-{a.service} - R$ {a.amount} - {new Date(a.duedate).toLocaleDateString()}
-</div>
-))}
+    <div>
 
-</div>
+      <h3>⚠ Contas vencendo</h3>
 
-)
+      {alerts.map((a, i) => (
 
+        <div key={i}>
+          {a.service} - R$ {a.amount} - {new Date(a.duedate).toLocaleDateString("pt-BR")}
+        </div>
+
+      ))}
+
+    </div>
+
+  );
 }

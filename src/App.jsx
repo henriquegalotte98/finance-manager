@@ -2,6 +2,8 @@ import './App.css';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { LogoIcon, HomeIcon, PlanilhaIcon, EconomiasIcon, DolarIcon, ViagensIcon, ConfigIcon } from './components/icons/Icons.jsx';
+import Dashboard from "./components/Dashboard.jsx";
+
 
 function App() {
 
@@ -204,10 +206,14 @@ function App() {
 
       <div className='app'>
 
-        <div id="home" className='home' style={{ display: activeApp === 'home' ? 'block' : 'none' }}>
-          <h2>Total do mês: R$ {monthTotal}</h2>
-          <h1>Bem-vindo ao seu app de finanças pessoais!</h1>
-          <p>Use a barra lateral para navegar entre os aplicativos.</p>
+        <div
+          id="home"
+          className="home"
+          style={{ display: activeApp === "home" ? "block" : "none" }}
+        >
+
+          <Dashboard API_URL={API_URL} />
+
         </div>
 
 
