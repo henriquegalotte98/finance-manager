@@ -80,11 +80,13 @@ function App() {
   const startEditExpense = (exp) => {
     setService(exp.service);
     setPrice(exp.amount * exp.numbertimes);
-    setDueDate(exp.duedate);
+
+    const formattedDate = new Date(exp.duedate).toISOString().split('T')[0];
+    setDueDate(formattedDate);
+
     setPaymentMethod(exp.paymentmethod);
     setNumberTimes(exp.numbertimes);
     setEditId(exp.expense_id);
-    setRecurrence(exp.recurrence || 'none');
   };
 
   // Resetar formulário
