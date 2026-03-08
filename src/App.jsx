@@ -11,7 +11,7 @@ function App() {
   const [paymentMethod, setPaymentMethod] = useState('credit_card');
   const [numberTimes, setNumberTimes] = useState('1');
   const [editId, setEditId] = useState(null);
-  const [recurrence,setRecurrence] = useState([])
+  const [recurrence, setRecurrence] = useState([])
 
   const [expenses, setExpenses] = useState([]); // lista de parcelas do mês
 
@@ -79,11 +79,12 @@ function App() {
   // Preparar edição
   const startEditExpense = (exp) => {
     setService(exp.service);
-    setPrice(exp.amount * exp.numbertimes); // valor total da compra
+    setPrice(exp.amount * exp.numbertimes);
     setDueDate(exp.duedate);
     setPaymentMethod(exp.paymentmethod);
     setNumberTimes(exp.numbertimes);
-    setEditId(exp.expense_id); // id da compra principal
+    setEditId(exp.expense_id);
+    setRecurrence(exp.recurrence || 'none');
   };
 
   // Resetar formulário
@@ -189,7 +190,7 @@ function App() {
               <option value="cash">Dinheiro</option>
               <option value="credit_store">Crediário</option>
             </select>
-            
+
 
             {(paymentMethod === 'credit_card' || paymentMethod === 'credit_store') && (
               <select value={numberTimes} onChange={(e) => setNumberTimes(e.target.value)}>
@@ -212,7 +213,7 @@ function App() {
           {/* Lista de gastos */}
           <h3>📊 Lista de gastos</h3>
           <table className="expenses_table">
-            <thead > 
+            <thead >
               <tr>
                 <th className='th_first'>Serviço</th>
                 <th>Valor da Parcela</th>
@@ -224,7 +225,7 @@ function App() {
             </thead>
             <tbody>
               {expenses.map((exp) => (
-                <tr key={exp.id}>
+                <tr key={exp.expense_id}>
                   <td>{exp.service}</td>
                   <td>R${exp.amount}</td>
                   <td>{exp.paymentmethod}</td>
