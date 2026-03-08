@@ -126,6 +126,18 @@ function App() {
 
   };
 
+  const [monthTotal, setMonthTotal] = useState(0)
+
+  useEffect(() => {
+
+    axios.get(`${API_URL}/dashboard/month-total/${selectedYear}/${selectedMonth}`)
+      .then(res => {
+
+        setMonthTotal(res.data.total || 0)
+
+      })
+
+  }, [selectedMonth, selectedYear])
 
   return (
 
@@ -193,6 +205,7 @@ function App() {
       <div className='app'>
 
         <div id="home" className='home' style={{ display: activeApp === 'home' ? 'block' : 'none' }}>
+          <h2>Total do mês: R$ {monthTotal}</h2>
           <h1>Bem-vindo ao seu app de finanças pessoais!</h1>
           <p>Use a barra lateral para navegar entre os aplicativos.</p>
         </div>

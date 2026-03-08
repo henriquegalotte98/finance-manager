@@ -38,7 +38,7 @@ function generateDate(baseDate, recurrence, index) {
 }
 
 
-function totalInstallments(numTimes, recurrence){
+function totalInstallments(numTimes, recurrence) {
 
   if (recurrence === "monthly") return 12;
   if (recurrence === "weekly") return 52;
@@ -95,7 +95,7 @@ app.post("/expenses", async (req, res) => {
 
     }
 
-    res.json({message:"Despesa criada"});
+    res.json({ message: "Despesa criada" });
 
   }
 
@@ -229,9 +229,9 @@ app.delete("/expenses/:id", async (req, res) => {
 
     const { id } = req.params;
 
-    await pool.query("DELETE FROM installments WHERE expense_id=$1",[id]);
+    await pool.query("DELETE FROM installments WHERE expense_id=$1", [id]);
 
-    await pool.query("DELETE FROM expenses WHERE id=$1",[id]);
+    await pool.query("DELETE FROM expenses WHERE id=$1", [id]);
 
     res.json({ message: "Removido" });
 
@@ -254,3 +254,52 @@ app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 
 });
+
+app.get("/dashboard/month-total/:year/:month", async (req, res) => {
+
+  const { year, month } = req.params
+
+  const result = await pool.query(
+    `
+SELECT SUM(amount) as total
+FROM installments
+WHERE EXTRACT(YEAR FROM duedate)=$1
+AND EXTRACT(MONTH FROM duedate)=$2
+`,
+    [year, month]
+  )
+
+  res.json(result.rows[0])
+
+})
+
+app.get("/dashboard/calendar", async (req, res) => {
+
+  const result = await pool.query(
+    `
+SELECT duedate, service, amount
+FROM installments i
+JOIN expenses e ON e.id=i.expense_id
+`
+  )
+
+  res.json(result.rows)
+
+})
+app.get("/dashboard/alerts", async (req,res)=>{
+
+const result = await pool.query(
+
+`
+SELECT service, duedate, amount
+FROM installments i
+JOIN expenses e ON e.id=i.expense_id
+WHERE duedate BETWEEN NOW() AND NOW() + interval '7 days'
+ORDER BY duedate
+`
+
+)
+
+res.json(result.rows)
+
+})
