@@ -302,14 +302,13 @@ li {
 }
 .expenses_table {
   width: 100%;
-  border-collapse: collapse;
   margin-top: 20px;
   color: black;
   background-color:#00BBC9 ;
-  border-radius: 20px;
+  border-radius: 20px 20px 0px 0px;
 }
 .table_list{
-  background-color: transparent;
+  /*...*/
   
 }
 .expenses_table th, .expenses_table td {
@@ -321,20 +320,34 @@ li {
 }
 
 .expenses_table th {
-  background: transparent;
+  
   font-weight: bold;
   
 
   
 }
+.th_first{
+  border-radius: 19px 0px 0px 0px;
+}
+
+.th_last{
+
+  border-radius: 0px 19px 0px 0px;
+
+}
+
+
 .expenses_table tr{
-  background-color: transparent;
-  border-radius: 20px;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  border-radius: 20px 20px;
   
   
 }
 .expenses_table thead{
   background-color: white;
+  border-radius: 20px;
   
   
 }

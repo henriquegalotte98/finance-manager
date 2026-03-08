@@ -214,12 +214,12 @@ function App() {
           <table className="expenses_table">
             <thead > 
               <tr>
-                <th>Serviço</th>
+                <th className='th_first'>Serviço</th>
                 <th>Valor da Parcela</th>
                 <th>Forma de Pagamento</th>
                 <th>Parcela</th>
                 <th>Vencimento</th>
-                <th>Ações</th>
+                <th className='th_last'>Ações</th>
               </tr>
             </thead>
             <tbody>
