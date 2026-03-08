@@ -10,8 +10,8 @@ function App() {
   const [dueDate, setDueDate] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('credit_card');
   const [numberTimes, setNumberTimes] = useState('1');
+  const [recurrence, setRecurrence] = useState('none');
   const [editId, setEditId] = useState(null);
-  const [recurrence, setRecurrence] = useState("none");
 
   const [expenses, setExpenses] = useState([]);
 
@@ -30,15 +30,19 @@ function App() {
 
 
   const reloadMonth = () => {
+
     axios.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
       .then(res => {
+
         if (Array.isArray(res.data)) {
           setExpenses(res.data);
         } else {
           setExpenses([]);
         }
+
       })
       .catch(err => console.error(err));
+
   };
 
 
@@ -62,7 +66,9 @@ function App() {
         })
         .catch(err => console.error(err));
 
-    } else {
+    }
+
+    else {
 
       axios.post(`${API_URL}/expenses`, newExpense)
         .then(() => {
@@ -70,14 +76,18 @@ function App() {
           resetForm();
         })
         .catch(err => console.error(err));
+
     }
+
   };
 
 
   const removeExpense = (id) => {
+
     axios.delete(`${API_URL}/expenses/${id}`)
       .then(() => reloadMonth())
       .catch(err => console.error(err));
+
   };
 
 
@@ -91,12 +101,18 @@ function App() {
     setDueDate(formattedDate);
 
     setPaymentMethod(exp.paymentmethod);
+
     setNumberTimes(exp.numbertimes);
-    setEditId(exp.expense_id);
+
+    setRecurrence(exp.recurrence || "none");
+
+    setEditId(exp.id);
+
   };
 
 
   const resetForm = () => {
+
     setService('');
     setPrice('');
     setDueDate('');
@@ -104,6 +120,7 @@ function App() {
     setNumberTimes('1');
     setRecurrence('none');
     setEditId(null);
+
   };
 
 
@@ -111,7 +128,7 @@ function App() {
 
     <div className='app_container'>
 
-      {/* MENU LATERAL (NÃO ALTERADO) */}
+      {/* MENU LATERAL */}
 
       <div className='side_menu_container'>
 
@@ -125,6 +142,7 @@ function App() {
           </div>
 
           <div className='user_info'>
+
             <div>
               <img
                 src="https://api.dicebear.com/9.x/avataaars/svg?seed=Kimberly"
@@ -138,9 +156,11 @@ function App() {
               <button className='btn_logout'>Sair</button>
               <li>{ConfigIcon}</li>
             </div>
+
           </div>
 
         </div>
+
 
         <div className='side_menu'>
 
@@ -165,7 +185,7 @@ function App() {
       </div>
 
 
-      {/* APP PRINCIPAL */}
+      {/* APP */}
 
       <div className='app'>
 
@@ -175,12 +195,8 @@ function App() {
         </div>
 
 
-        {/* PLANILHA */}
-
         <div id="excel" className='excel' style={{ display: activeApp === 'excel' ? 'block' : 'none' }}>
 
-
-          {/* FILTRO MÊS */}
 
           <div className='month_filter'>
 
@@ -192,6 +208,7 @@ function App() {
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
               >
+
                 {[...Array(12)].map((_, i) => {
 
                   const monthDate = new Date(selectedYear, i, 1);
@@ -203,25 +220,35 @@ function App() {
                       {monthName}
                     </option>
                   );
+
                 })}
+
               </select>
+
 
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(parseInt(e.target.value))}
               >
+
                 {[...Array(5)].map((_, i) => {
+
                   const year = new Date().getFullYear() - 2 + i;
-                  return <option key={year} value={year}>{year}</option>;
+
+                  return (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  );
+
                 })}
+
               </select>
 
             </div>
 
           </div>
 
-
-          {/* FORMULÁRIO */}
 
           <div>
 
@@ -245,28 +272,44 @@ function App() {
               onChange={(e) => setDueDate(e.target.value)}
             />
 
+
             <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
+
               <option value="credit_card">Cartão de Crédito</option>
               <option value="debit_card">Cartão de Débito</option>
               <option value="bank_transfer">Transferência Bancária</option>
               <option value="cash">Dinheiro</option>
               <option value="credit_store">Crediário</option>
+
             </select>
 
+
             {(paymentMethod === 'credit_card' || paymentMethod === 'credit_store') && (
+
               <select value={numberTimes} onChange={(e) => setNumberTimes(e.target.value)}>
+
                 {[...Array(12)].map((_, i) => (
-                  <option key={i + 1} value={i + 1}>{i + 1}x</option>
+
+                  <option key={i + 1} value={i + 1}>
+                    {i + 1}x
+                  </option>
+
                 ))}
+
               </select>
+
             )}
 
+
             <select value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
+
               <option value="none">Sem recorrência</option>
               <option value="monthly">Mensal</option>
               <option value="weekly">Semanal</option>
               <option value="yearly">Anual</option>
+
             </select>
+
 
             <button onClick={addExpense}>
               {editId !== null ? "Salvar edição" : "Adicionar"}
@@ -279,21 +322,24 @@ function App() {
           </div>
 
 
-          {/* TABELA */}
-
           <h3>📊 Lista de gastos</h3>
+
 
           <table className="expenses_table">
 
             <thead>
+
               <tr>
+
                 <th className='th_first'>Serviço</th>
                 <th>Valor da Parcela</th>
                 <th>Forma de Pagamento</th>
                 <th>Parcela</th>
                 <th>Vencimento</th>
                 <th className='th_last'>Ações</th>
+
               </tr>
+
             </thead>
 
             <tbody>
@@ -335,6 +381,7 @@ function App() {
     </div>
 
   )
+
 }
 
 export default App

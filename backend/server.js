@@ -16,9 +16,12 @@ const pool = new Pool({
 
 
 function addMonths(date, months) {
+
   const d = new Date(date);
   d.setMonth(d.getMonth() + months);
+
   return d.toISOString().split("T")[0];
+
 }
 
 
@@ -54,23 +57,28 @@ app.post("/expenses", async (req, res) => {
 
     const parcelaValor = price / numTimes;
 
-    // gerar parcelas dependendo da recorrência
     let totalInstallments = numTimes;
 
     if (recurrence === "monthly") totalInstallments = 12;
     if (recurrence === "weekly") totalInstallments = 52;
     if (recurrence === "yearly") totalInstallments = 5;
 
+
     for (let i = 0; i < totalInstallments; i++) {
 
       let vencimento = new Date(dueDate);
 
       if (recurrence === "monthly") vencimento.setMonth(vencimento.getMonth() + i);
+
       else if (recurrence === "weekly") vencimento.setDate(vencimento.getDate() + (7 * i));
+
       else if (recurrence === "yearly") vencimento.setFullYear(vencimento.getFullYear() + i);
-      else vencimento = addMonths(dueDate, i);
+
+      else vencimento = new Date(addMonths(dueDate, i));
+
 
       const formattedDate = new Date(vencimento).toISOString().split("T")[0];
+
 
       await pool.query(
 
@@ -86,11 +94,77 @@ app.post("/expenses", async (req, res) => {
 
     res.json(expense);
 
-  } catch (err) {
+  }
+
+  catch (err) {
 
     console.error(err);
     res.status(500).send("Erro ao adicionar despesa");
 
   }
+
+});
+
+
+app.get("/expenses/month/:year/:month", async (req, res) => {
+
+  try {
+
+    const { year, month } = req.params;
+
+    const result = await pool.query(
+
+      `SELECT i.*, e.service, e.paymentmethod, e.numbertimes, e.recurrence
+      FROM installments i
+      JOIN expenses e ON e.id = i.expense_id
+      WHERE EXTRACT(YEAR FROM i.duedate) = $1
+      AND EXTRACT(MONTH FROM i.duedate) = $2
+      ORDER BY i.duedate`,
+
+      [year, month]
+
+    );
+
+    res.json(result.rows);
+
+  }
+
+  catch (err) {
+
+    console.error(err);
+    res.status(500).send("Erro ao buscar parcelas");
+
+  }
+
+});
+
+
+app.delete("/expenses/:id", async (req, res) => {
+
+  try {
+
+    const { id } = req.params;
+
+    await pool.query("DELETE FROM expenses WHERE id=$1", [id]);
+
+    res.json({ message: "Removido" });
+
+  }
+
+  catch (err) {
+
+    console.error(err);
+    res.status(500).send("Erro ao remover");
+
+  }
+
+});
+
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+
+  console.log(`Servidor rodando na porta ${PORT}`);
 
 });
