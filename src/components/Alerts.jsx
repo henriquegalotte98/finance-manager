@@ -7,32 +7,13 @@ export default function Alerts({ API_URL }) {
 
     useEffect(() => {
 
-        app.get("/dashboard/alerts", async (req, res) => {
-
-            try {
-
-                const result = await pool.query(`
-      SELECT 
-      e.service,
-      i.duedate,
-      i.amount
-      FROM installments i
-      JOIN expenses e ON e.id = i.expense_id
-      WHERE i.duedate >= CURRENT_DATE
-      AND i.duedate <= CURRENT_DATE + INTERVAL '7 days'
-      ORDER BY i.duedate
-    `);
-
-                res.json(result.rows);
-
-            } catch (err) {
-
-                console.error("Erro alerts:", err);
-                res.json([]);
-
-            }
-
-        });
+        axios.get(`${API_URL}/dashboard/alerts`)
+            .then(res => {
+                setAlerts(res.data);
+            })
+            .catch(err => {
+                console.error("Erro ao buscar alerts:", err);
+            });
 
     }, [API_URL]);
 
