@@ -79,10 +79,10 @@ function App() {
   // Preparar edição
   const startEditExpense = (exp) => {
     setService(exp.service);
-    setPrice(exp.amount * exp.numberTimes); // valor total da compra
-    setDueDate(exp.dueDate);
-    setPaymentMethod(exp.paymentMethod);
-    setNumberTimes(exp.numberTimes);
+    setPrice(exp.amount * exp.numbertimes); // valor total da compra
+    setDueDate(exp.duedate);
+    setPaymentMethod(exp.paymentmethod);
+    setNumberTimes(exp.numbertimes);
     setEditId(exp.expense_id); // id da compra principal
   };
 
