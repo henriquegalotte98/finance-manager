@@ -4,266 +4,367 @@ import axios from 'axios';
 import { LogoIcon, HomeIcon, PlanilhaIcon, EconomiasIcon, DolarIcon, ViagensIcon, ConfigIcon } from './components/icons/Icons.jsx';
 
 function App() {
-  // ---------------- ESTADOS ---------------- //
-  const [service, setService] = useState('');
-  const [price, setPrice] = useState('');
-  const [dueDate, setDueDate] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('credit_card');
-  const [numberTimes, setNumberTimes] = useState('1');
-  const [editId, setEditId] = useState(null);
-  const [recurrence, setRecurrence] = useState([])
-
-  const [expenses, setExpenses] = useState([]); // lista de parcelas do mês
-
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const API_URL = import.meta.env.VITE_API_URL;
 
-  const [activeApp, setActiveApp] = useState('home'); // controle de navegação lateral
+  // ---------------- ESTADOS ---------------- //
 
-  const showApp = (appName) => setActiveApp(appName);
+  const [service,setService]=useState('')
+  const [price,setPrice]=useState('')
+  const [dueDate,setDueDate]=useState('')
+  const [paymentMethod,setPaymentMethod]=useState('credit_card')
+  const [numberTimes,setNumberTimes]=useState(1)
+  const [recurrence,setRecurrence]=useState('none')
+  const [editId,setEditId]=useState(null)
 
-  // ---------------- FUNÇÕES ---------------- //
+  const [expenses,setExpenses]=useState([])
+  const [summary,setSummary]=useState({})
+  const [forecast,setForecast]=useState([])
 
-  // Buscar parcelas do mês
-  useEffect(() => {
+  const [selectedMonth,setSelectedMonth]=useState(new Date().getMonth()+1)
+  const [selectedYear,setSelectedYear]=useState(new Date().getFullYear())
+
+  const [activeApp,setActiveApp]=useState('home')
+
+  const showApp=(app)=>setActiveApp(app)
+
+  // ---------------- API ---------------- //
+
+  const loadMonth=()=>{
+
     axios.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
-      .then(res => {
-        if (Array.isArray(res.data)) {
-          setExpenses(res.data);
-        } else {
-          console.error("Resposta inesperada da API:", res.data);
-          setExpenses([]);
-        }
-      })
-      .catch(err => console.error(err));
-  }, [API_URL, selectedMonth, selectedYear]);
+      .then(res=>setExpenses(res.data))
+      .catch(err=>console.error(err))
 
-  const handlePaymentMethodChange = (event) => setPaymentMethod(event.target.value);
+    axios.get(`${API_URL}/expenses/summary/${selectedYear}/${selectedMonth}`)
+      .then(res=>setSummary(res.data))
+      .catch(err=>console.error(err))
 
-  // Adicionar ou editar despesa
-  const addExpense = () => {
-    const newExpense = { service, price, dueDate, paymentMethod, numberTimes };
+    axios.get(`${API_URL}/expenses/forecast`)
+      .then(res=>setForecast(res.data))
+      .catch(err=>console.error(err))
+  }
 
-    if (editId !== null) {
-      axios.put(`${API_URL}/expenses/${editId}`, newExpense)
-        .then(() => reloadMonth())
-        .catch(err => console.error(err));
-    } else {
-      axios.post(`${API_URL}/expenses`, newExpense)
-        .then(() => reloadMonth())
-        .catch(err => console.error(err));
+  useEffect(()=>{
+    loadMonth()
+  },[selectedMonth,selectedYear])
+
+  // ---------------- CRUD ---------------- //
+
+  const addExpense=()=>{
+
+    const newExpense={
+      service,
+      price,
+      dueDate,
+      paymentMethod,
+      numberTimes,
+      recurrence
     }
-  };
 
-  // Recarregar parcelas do mês
-  const reloadMonth = () => {
-    axios.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
-      .then(res => {
-        if (Array.isArray(res.data)) {
-          setExpenses(res.data);
-        }
-        resetForm();
-      })
-      .catch(err => console.error(err));
-  };
+    if(editId!==null){
 
-  // Remover despesa
-  const removeExpense = (id) => {
+      axios.put(`${API_URL}/expenses/${editId}`,newExpense)
+        .then(()=>loadMonth())
+
+    }else{
+
+      axios.post(`${API_URL}/expenses`,newExpense)
+        .then(()=>loadMonth())
+
+    }
+
+    resetForm()
+  }
+
+  const removeExpense=(id)=>{
+
     axios.delete(`${API_URL}/expenses/${id}`)
-      .then(() => reloadMonth())
-      .catch(err => console.error(err));
-  };
+      .then(()=>loadMonth())
+  }
 
-  // Preparar edição
-  const startEditExpense = (exp) => {
-    setService(exp.service);
-    setPrice(exp.amount * exp.numbertimes);
+  const startEditExpense=(exp)=>{
 
-    const formattedDate = new Date(exp.duedate).toISOString().split('T')[0];
-    setDueDate(formattedDate);
+    setService(exp.service)
+    setPrice(exp.amount*exp.numbertimes)
 
-    setPaymentMethod(exp.paymentmethod);
-    setNumberTimes(exp.numbertimes);
-    setEditId(exp.expense_id);
-  };
+    const formattedDate=new Date(exp.duedate).toISOString().split('T')[0]
+    setDueDate(formattedDate)
 
-  // Resetar formulário
-  const resetForm = () => {
-    setService('');
-    setPrice('');
-    setDueDate('');
-    setPaymentMethod('credit_card');
-    setNumberTimes('1');
-    setEditId(null);
-  };
+    setPaymentMethod(exp.paymentmethod)
+    setNumberTimes(exp.numbertimes)
+    setEditId(exp.expense_id)
+  }
 
-  // ---------------- RENDERIZAÇÃO ---------------- //
-  return (
-    <div className='app_container'>
-      {/* Menu lateral */}
-      <div className='side_menu_container'>
-        <div className='side_header'>
-          <div className='logo' onClick={() => showApp('home')}>
-            <li onClick={() => showApp('home')}>{LogoIcon}</li>
-            <div className='app_name'>
-              <p>Finanças</p>
-            </div>
-          </div>
-          <div className='user_info'>
-            <div>
-              <img
-                src="https://api.dicebear.com/9.x/avataaars/svg?seed=Kimberly"
-                alt="avatar" className='user_avatar' />
-              <p>Henrique</p>
-            </div>
-            <div className='div_btn_logout'>
-              <button className='btn_logout'>Sair</button>
-              <li>{ConfigIcon}</li>
-            </div>
-          </div>
-        </div>
-        <div className='side_menu'>
-          <menu>
-            <li onClick={() => showApp('home')} >{HomeIcon}</li>
-            <li onClick={() => showApp('excel')}>{PlanilhaIcon}</li>
-            <li onClick={() => showApp('economias')}>{EconomiasIcon}</li>
-            <li onClick={() => showApp('dolar')}>{DolarIcon}</li>
-            <li onClick={() => showApp('viagens')}>{ViagensIcon}</li>
-          </menu>
-          <div className='subtitle_icons'>
-            <p onClick={() => showApp('home')}>Início</p>
-            <p onClick={() => showApp('excel')}>Planilha</p>
-            <p onClick={() => showApp('economias')}>Economias</p>
-            <p onClick={() => showApp('dolar')}>Dólar</p>
-            <p onClick={() => showApp('viagens')}>Viagens</p>
-          </div>
-        </div>
-      </div>
+  const resetForm=()=>{
+    setService('')
+    setPrice('')
+    setDueDate('')
+    setPaymentMethod('credit_card')
+    setNumberTimes(1)
+    setRecurrence('none')
+    setEditId(null)
+  }
 
-      {/* Conteúdo principal */}
-      <div className='app'>
+  // ---------------- RENDER ---------------- //
 
-        {/* Tela Home */}
-        <div id="home" className='home' style={{ display: activeApp === 'home' ? 'block' : 'none' }}>
-          <h1>Bem-vindo ao seu app de finanças pessoais!</h1>
-          <p>Use a barra lateral para navegar entre os aplicativos.</p>
-        </div>
+  return(
 
-        {/* Tela Excel (Planilha de gastos) */}
-        <div id="excel" className='excel' style={{ display: activeApp === 'excel' ? 'block' : 'none' }}>
-          {/* Filtro de mês */}
-          <div className='month_filter'>
-            <h3>Filtrar por Mês</h3>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-              >
-                {[...Array(12)].map((_, i) => {
-                  const monthDate = new Date(selectedYear, i, 1);
-                  const monthName = monthDate.toLocaleDateString('pt-BR', { month: 'long' });
-                  return <option key={i + 1} value={i + 1}>{monthName}</option>;
-                })}
-              </select>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              >
-                {[...Array(5)].map((_, i) => {
-                  const year = new Date().getFullYear() - 2 + i;
-                  return <option key={year} value={year}>{year}</option>;
-                })}
-              </select>
-            </div>
-          </div>
+  <div className="app_container">
 
-          {/* Formulário de cadastro */}
-          <div>
-            <input type="text" placeholder='Conta ou serviço' value={service} onChange={(e) => setService(e.target.value)} />
-            <input type="number" placeholder='Preço' value={price} onChange={(e) => setPrice(e.target.value)} />
-            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+{/* SIDEBAR */}
 
-            <select value={paymentMethod} onChange={handlePaymentMethodChange}>
-              <option value="credit_card">Cartão de Crédito</option>
-              <option value="debit_card">Cartão de Débito</option>
-              <option value="bank_transfer">Transferência Bancária</option>
-              <option value="cash">Dinheiro</option>
-              <option value="credit_store">Crediário</option>
-            </select>
+<div className="side_menu_container">
 
+<div className="side_header">
 
-            {(paymentMethod === 'credit_card' || paymentMethod === 'credit_store') && (
-              <select value={numberTimes} onChange={(e) => setNumberTimes(e.target.value)}>
-                {[...Array(12)].map((_, i) => (
-                  <option key={i + 1} value={i + 1}>{i + 1}x</option>
-                ))}
-              </select>
-            )}
+<div className="logo" onClick={()=>showApp('home')}>
+<li>{LogoIcon}</li>
+<div className="app_name"><p>Finanças</p></div>
+</div>
 
-            <select value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
-              <option value="none">Sem recorrência</option>
-              <option value="monthly">Mensal</option>
-              <option value="yearly">Anual</option>
-              <option value="weekly">Semanal</option>
-            </select>
-            <button onClick={addExpense}>{editId !== null ? "Salvar edição" : "Adicionar"}</button>
-            <button onClick={resetForm}>Cancelar</button>
-          </div>
+<div className="user_info">
+<img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Henrique" className="user_avatar"/>
+<p>Henrique</p>
+</div>
 
-          {/* Lista de gastos */}
-          <h3>📊 Lista de gastos</h3>
-          <table className="expenses_table">
-            <thead >
-              <tr>
-                <th className='th_first'>Serviço</th>
-                <th>Valor da Parcela</th>
-                <th>Forma de Pagamento</th>
-                <th>Parcela</th>
-                <th>Vencimento</th>
-                <th className='th_last'>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {expenses.map((exp) => (
-                <tr key={exp.expense_id}>
-                  <td>{exp.service}</td>
-                  <td>R${exp.amount}</td>
-                  <td>{exp.paymentmethod}</td>
-                  <td>{exp.installment_number} de {exp.numbertimes}</td>
-                  <td>{new Date(exp.duedate).toLocaleDateString('pt-BR')}</td>
-                  <td>
-                    <button onClick={() => startEditExpense(exp)} title="Editar">✏️</button>
-                    <button onClick={() => removeExpense(exp.expense_id)} title="Remover">❌</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+</div>
 
-        {/* Tela Economias */}
-        <div id="economias" className='economias' style={{ display: activeApp === 'economias' ? 'block' : 'none' }}>
-          <h2>App de Economias</h2>
-          <p>Aqui você poderá registrar suas economias futuras.</p>
-        </div>
+<div className="side_menu">
 
-        {/* Tela Dólar */}
-        <div id="dolar" className='dolar' style={{ display: activeApp === 'dolar' ? 'block' : 'none' }}>
-          <h2>App de Dólar</h2>
-          <p>Acompanhe a cotação do dólar e registre compras internacionais.</p>
-        </div>
+<menu>
+<li onClick={()=>showApp('home')}>{HomeIcon}</li>
+<li onClick={()=>showApp('excel')}>{PlanilhaIcon}</li>
+<li onClick={()=>showApp('economias')}>{EconomiasIcon}</li>
+<li onClick={()=>showApp('dolar')}>{DolarIcon}</li>
+<li onClick={()=>showApp('viagens')}>{ViagensIcon}</li>
+</menu>
 
-        {/* Tela Viagens */}
-        <div id="viagens" className='viagens' style={{ display: activeApp === 'viagens' ? 'block' : 'none' }}>
-          <h2>App de Viagens</h2>
-          <p>Planeje suas viagens e registre os gastos relacionados.</p>
-        </div>
+</div>
 
-      </div>
-    </div>
-  )
+</div>
+
+{/* APP */}
+
+<div className="app">
+
+{/* HOME */}
+
+{activeApp==="home"&&(
+
+<div>
+
+<h1>Dashboard Financeiro</h1>
+
+<div className="dashboard">
+
+<div className="card">
+<h3>Total do mês</h3>
+<p>R$ {summary.total||0}</p>
+</div>
+
+<div className="card">
+<h3>Cartão</h3>
+<p>R$ {summary.credit||0}</p>
+</div>
+
+<div className="card">
+<h3>Débito</h3>
+<p>R$ {summary.debit||0}</p>
+</div>
+
+</div>
+
+<h2>Previsão de Gastos</h2>
+
+<table className="forecast_table">
+
+<thead>
+<tr>
+<th>Mês</th>
+<th>Total</th>
+</tr>
+</thead>
+
+<tbody>
+
+{forecast.map((f,i)=>{
+
+const date=new Date(f.month)
+
+return(
+<tr key={i}>
+<td>{date.toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}</td>
+<td>R$ {f.total}</td>
+</tr>
+)
+
+})}
+
+</tbody>
+
+</table>
+
+</div>
+
+)}
+
+{/* PLANILHA */}
+
+{activeApp==="excel"&&(
+
+<div>
+
+<h2>Controle de Gastos</h2>
+
+<div className="month_filter">
+
+<select
+value={selectedMonth}
+onChange={(e)=>setSelectedMonth(parseInt(e.target.value))}
+>
+
+{[...Array(12)].map((_,i)=>{
+
+const monthDate=new Date(selectedYear,i,1)
+const monthName=monthDate.toLocaleDateString('pt-BR',{month:'long'})
+
+return<option key={i+1} value={i+1}>{monthName}</option>
+
+})}
+
+</select>
+
+<select
+value={selectedYear}
+onChange={(e)=>setSelectedYear(parseInt(e.target.value))}
+>
+
+{[...Array(5)].map((_,i)=>{
+
+const year=new Date().getFullYear()-2+i
+
+return<option key={year} value={year}>{year}</option>
+
+})}
+
+</select>
+
+</div>
+
+{/* FORM */}
+
+<div className="expense_form">
+
+<input
+placeholder="Serviço"
+value={service}
+onChange={(e)=>setService(e.target.value)}
+/>
+
+<input
+type="number"
+placeholder="Valor"
+value={price}
+onChange={(e)=>setPrice(e.target.value)}
+/>
+
+<input
+type="date"
+value={dueDate}
+onChange={(e)=>setDueDate(e.target.value)}
+/>
+
+<select value={paymentMethod} onChange={(e)=>setPaymentMethod(e.target.value)}>
+
+<option value="credit_card">Cartão Crédito</option>
+<option value="debit_card">Cartão Débito</option>
+<option value="cash">Dinheiro</option>
+
+</select>
+
+<select value={numberTimes} onChange={(e)=>setNumberTimes(e.target.value)}>
+
+{[...Array(12)].map((_,i)=>(
+
+<option key={i+1} value={i+1}>{i+1}x</option>
+
+))}
+
+</select>
+
+<select value={recurrence} onChange={(e)=>setRecurrence(e.target.value)}>
+
+<option value="none">Sem recorrência</option>
+<option value="monthly">Mensal</option>
+<option value="weekly">Semanal</option>
+<option value="yearly">Anual</option>
+
+</select>
+
+<button onClick={addExpense}>
+{editId?"Salvar":"Adicionar"}
+</button>
+
+<button onClick={resetForm}>Cancelar</button>
+
+</div>
+
+{/* TABELA */}
+
+<table className="expenses_table">
+
+<thead>
+
+<tr>
+<th>Serviço</th>
+<th>Valor</th>
+<th>Pagamento</th>
+<th>Parcela</th>
+<th>Vencimento</th>
+<th>Ações</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{expenses.map(exp=>(
+
+<tr key={exp.expense_id}>
+
+<td>{exp.service}</td>
+<td>R$ {exp.amount}</td>
+<td>{exp.paymentmethod}</td>
+<td>{exp.installment_number}/{exp.numbertimes}</td>
+<td>{new Date(exp.duedate).toLocaleDateString('pt-BR')}</td>
+
+<td>
+
+<button onClick={()=>startEditExpense(exp)}>✏️</button>
+
+<button onClick={()=>removeExpense(exp.expense_id)}>❌</button>
+
+</td>
+
+</tr>
+
+))}
+
+</tbody>
+
+</table>
+
+</div>
+
+)}
+
+</div>
+
+</div>
+
+)
+
 }
 
-export default App;
+export default App

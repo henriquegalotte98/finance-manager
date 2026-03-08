@@ -1,140 +1,340 @@
-// Importação das bibliotecas necessárias
-const express = require("express");   // Framework para criar servidor HTTP
-const cors = require("cors");         // Permite requisições de outros domínios (ex: front-end separado)
-const bodyParser = require("body-parser"); // Facilita leitura de JSON no corpo das requisições
-const { Pool } = require("pg");       // Cliente para PostgreSQL
+// ---------------- IMPORTS ----------------
 
-const app = express();
-app.use(cors());
-app.use(bodyParser.json());
+const express = require("express")
+const cors = require("cors")
+const bodyParser = require("body-parser")
+const { Pool } = require("pg")
+const { v4: uuidv4 } = require("uuid")
 
-// Conexão com PostgreSQL (Render/Supabase)
-// DATABASE_URL deve estar configurada nas variáveis de ambiente
+const app = express()
+
+app.use(cors())
+app.use(bodyParser.json())
+
+// ---------------- DATABASE ----------------
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
-});
+})
 
-// Função auxiliar para adicionar meses a uma data
+// ---------------- HELPERS ----------------
+
 function addMonths(date, months) {
-  const d = new Date(date);
-  d.setMonth(d.getMonth() + months);
-  return d.toISOString().split("T")[0]; // retorna no formato YYYY-MM-DD
+  const d = new Date(date)
+  d.setMonth(d.getMonth() + months)
+  return d.toISOString().split("T")[0]
 }
 
-// ---------------- ROTAS ---------------- //
+function addWeeks(date, weeks) {
+  const d = new Date(date)
+  d.setDate(d.getDate() + (7 * weeks))
+  return d.toISOString().split("T")[0]
+}
 
-// Criar uma nova despesa e gerar parcelas
+function addYears(date, years) {
+  const d = new Date(date)
+  d.setFullYear(d.getFullYear() + years)
+  return d.toISOString().split("T")[0]
+}
+
+// ---------------- CREATE EXPENSE ----------------
+
 app.post("/expenses", async (req, res) => {
+
   try {
-    const { service, price, paymentMethod, numberTimes, dueDate } = req.body;
-    const numTimes = parseInt(numberTimes, 10);
 
-    // 1. Inserir a compra principal na tabela expenses
-    const result = await pool.query(
-      "INSERT INTO expenses (service, price, paymentMethod, numberTimes) VALUES ($1,$2,$3,$4) RETURNING *",
-      [service, price, paymentMethod, numTimes]
-    );
-    const expense = result.rows[0];
+    const groupId = uuidv4()
 
-    // 2. Gerar parcelas na tabela installments
-    const parcelaValor = price / numTimes;
-    for (let i = 0; i < numTimes; i++) {
-      const vencimento = addMonths(dueDate, i);
-      await pool.query(
-        "INSERT INTO installments (expense_id, installment_number, amount, dueDate) VALUES ($1,$2,$3,$4)",
-        [expense.id, i + 1, parcelaValor, vencimento]
-      );
+    const {
+      service,
+      price,
+      paymentMethod,
+      numberTimes,
+      dueDate,
+      recurrence
+    } = req.body
+
+    const numTimes = parseInt(numberTimes, 10)
+
+    let recurrenceTimes = 1
+
+    if (recurrence === "weekly") recurrenceTimes = 52
+    if (recurrence === "monthly") recurrenceTimes = 12
+    if (recurrence === "yearly") recurrenceTimes = 5
+
+    for (let r = 0; r < recurrenceTimes; r++) {
+
+      let recurrenceDate = dueDate
+
+      if (recurrence === "weekly") recurrenceDate = addWeeks(dueDate, r)
+      if (recurrence === "monthly") recurrenceDate = addMonths(dueDate, r)
+      if (recurrence === "yearly") recurrenceDate = addYears(dueDate, r)
+
+      // criar expense principal
+
+      const result = await pool.query(
+        `INSERT INTO expenses
+        (service, price, paymentMethod, numberTimes, recurrence, expense_group_id)
+        VALUES ($1,$2,$3,$4,$5,$6)
+        RETURNING *`,
+        [service, price, paymentMethod, numTimes, recurrence, groupId]
+      )
+
+      const expense = result.rows[0]
+
+      const parcelaValor = price / numTimes
+
+      for (let i = 0; i < numTimes; i++) {
+
+        const vencimento = addMonths(recurrenceDate, i)
+
+        await pool.query(
+          `INSERT INTO installments
+          (expense_id, installment_number, amount, dueDate)
+          VALUES ($1,$2,$3,$4)`,
+          [expense.id, i + 1, parcelaValor, vencimento]
+        )
+
+      }
+
     }
 
-    res.json(expense);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Erro ao adicionar despesa");
-  }
-});
+    res.json({ message: "Despesa criada com sucesso" })
 
-// Listar todas as despesas cadastradas
+  } catch (err) {
+
+    console.error(err)
+    res.status(500).send("Erro ao adicionar despesa")
+
+  }
+
+})
+
+// ---------------- LIST ALL EXPENSES ----------------
+
 app.get("/expenses", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM expenses ORDER BY created_at ASC");
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Erro ao buscar despesas");
-  }
-});
 
-// Listar parcelas de um mês específico
+  try {
+
+    const result = await pool.query(
+      "SELECT * FROM expenses ORDER BY created_at ASC"
+    )
+
+    res.json(result.rows)
+
+  } catch (err) {
+
+    console.error(err)
+    res.status(500).send("Erro ao buscar despesas")
+
+  }
+
+})
+
+// ---------------- LIST MONTH EXPENSES ----------------
+
 app.get("/expenses/month/:year/:month", async (req, res) => {
-  try {
-    const { year, month } = req.params;
-    const result = await pool.query(
-      `SELECT i.*, e.service, e.paymentMethod, e.numberTimes
-   FROM installments i
-   JOIN expenses e ON e.id = i.expense_id
-   WHERE EXTRACT(YEAR FROM i.dueDate) = $1
-     AND EXTRACT(MONTH FROM i.dueDate) = $2
-   ORDER BY i.dueDate`,
-      [year, month]
-    );
 
-    res.json(result.rows);
+  try {
+
+    const { year, month } = req.params
+
+    const result = await pool.query(
+      `SELECT 
+        i.*, 
+        e.service, 
+        e.paymentMethod, 
+        e.numberTimes,
+        e.expense_group_id
+      FROM installments i
+      JOIN expenses e ON e.id = i.expense_id
+      WHERE EXTRACT(YEAR FROM i.dueDate) = $1
+      AND EXTRACT(MONTH FROM i.dueDate) = $2
+      ORDER BY i.dueDate`,
+      [year, month]
+    )
+
+    res.json(result.rows)
+
   } catch (err) {
-    console.error("Erro SQL:", err.message); // <-- mostra o erro real
-    res.status(500).send("Erro ao buscar parcelas do mês");
+
+    console.error(err)
+    res.status(500).send("Erro ao buscar parcelas")
+
   }
 
-});
+})
 
-// Atualizar uma despesa (remove parcelas antigas e recria)
-app.put("/expenses/:id", async (req, res) => {
+// ---------------- MONTH SUMMARY ----------------
+
+app.get("/expenses/summary/:year/:month", async (req, res) => {
+
   try {
-    const { id } = req.params;
-    const { service, price, paymentMethod, numberTimes, dueDate } = req.body;
-    const numTimes = parseInt(numberTimes, 10);
 
-    // Atualizar dados da compra principal
+    const { year, month } = req.params
+
     const result = await pool.query(
-      "UPDATE expenses SET service=$1, price=$2, paymentMethod=$3, numberTimes=$4 WHERE id=$5 RETURNING *",
+      `SELECT
+        SUM(amount) AS total,
+        SUM(CASE WHEN paymentmethod='credit_card' THEN amount ELSE 0 END) AS credit,
+        SUM(CASE WHEN paymentmethod='debit_card' THEN amount ELSE 0 END) AS debit
+      FROM installments i
+      JOIN expenses e ON e.id = i.expense_id
+      WHERE EXTRACT(MONTH FROM i.dueDate) = $1
+      AND EXTRACT(YEAR FROM i.dueDate) = $2`,
+      [month, year]
+    )
+
+    res.json(result.rows[0])
+
+  } catch (err) {
+
+    console.error(err)
+    res.status(500).send("Erro ao gerar resumo")
+
+  }
+
+})
+
+// ---------------- FORECAST ----------------
+
+app.get("/expenses/forecast", async (req, res) => {
+
+  try {
+
+    const result = await pool.query(
+      `SELECT
+        DATE_TRUNC('month', dueDate) AS month,
+        SUM(amount) AS total
+      FROM installments
+      WHERE dueDate >= CURRENT_DATE
+      GROUP BY month
+      ORDER BY month
+      LIMIT 6`
+    )
+
+    res.json(result.rows)
+
+  } catch (err) {
+
+    console.error(err)
+    res.status(500).send("Erro previsão")
+
+  }
+
+})
+
+// ---------------- SUBSCRIPTIONS DETECTION ----------------
+
+app.get("/expenses/subscriptions", async (req, res) => {
+
+  try {
+
+    const result = await pool.query(
+      `SELECT service, COUNT(*) AS total
+      FROM expenses
+      GROUP BY service
+      HAVING COUNT(*) >= 3
+      ORDER BY total DESC`
+    )
+
+    res.json(result.rows)
+
+  } catch (err) {
+
+    console.error(err)
+    res.status(500).send("Erro detectar assinaturas")
+
+  }
+
+})
+
+// ---------------- UPDATE EXPENSE ----------------
+
+app.put("/expenses/:id", async (req, res) => {
+
+  try {
+
+    const { id } = req.params
+
+    const {
+      service,
+      price,
+      paymentMethod,
+      numberTimes,
+      dueDate
+    } = req.body
+
+    const numTimes = parseInt(numberTimes, 10)
+
+    const result = await pool.query(
+      `UPDATE expenses
+      SET service=$1, price=$2, paymentMethod=$3, numberTimes=$4
+      WHERE id=$5
+      RETURNING *`,
       [service, price, paymentMethod, numTimes, id]
-    );
-    const expense = result.rows[0];
+    )
 
-    // Deletar parcelas antigas
-    await pool.query("DELETE FROM installments WHERE expense_id=$1", [id]);
+    await pool.query(
+      "DELETE FROM installments WHERE expense_id=$1",
+      [id]
+    )
 
-    // Recriar parcelas
-    const parcelaValor = price / numTimes;
+    const parcelaValor = price / numTimes
+
     for (let i = 0; i < numTimes; i++) {
-      const vencimento = addMonths(dueDate, i);
+
+      const vencimento = addMonths(dueDate, i)
+
       await pool.query(
-        "INSERT INTO installments (expense_id, installment_number, amount, dueDate) VALUES ($1,$2,$3,$4)",
+        `INSERT INTO installments
+        (expense_id, installment_number, amount, dueDate)
+        VALUES ($1,$2,$3,$4)`,
         [id, i + 1, parcelaValor, vencimento]
-      );
+      )
+
     }
 
-    res.json(expense);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erro ao atualizar gasto" });
-  }
-});
+    res.json(result.rows[0])
 
-// Remover uma despesa (e suas parcelas)
+  } catch (err) {
+
+    console.error(err)
+    res.status(500).send("Erro atualizar gasto")
+
+  }
+
+})
+
+// ---------------- DELETE EXPENSE ----------------
+
 app.delete("/expenses/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    await pool.query("DELETE FROM expenses WHERE id=$1", [id]);
-    res.json({ message: "Gasto removido!" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erro ao remover gasto" });
-  }
-});
 
-// Inicializar servidor
-const PORT = process.env.PORT || 3000;
+  try {
+
+    const { id } = req.params
+
+    await pool.query(
+      "DELETE FROM expenses WHERE id=$1",
+      [id]
+    )
+
+    res.json({ message: "Gasto removido" })
+
+  } catch (err) {
+
+    console.error(err)
+    res.status(500).send("Erro remover")
+
+  }
+
+})
+
+// ---------------- SERVER ----------------
+
+const PORT = process.env.PORT || 3000
+
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
+  console.log("Servidor rodando na porta", PORT)
+})
