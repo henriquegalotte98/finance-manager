@@ -12,7 +12,7 @@ function App() {
   const [numberTimes, setNumberTimes] = useState('1');
   const [recurrence, setRecurrence] = useState('none');
   const [editId, setEditId] = useState(null);
-
+  const [loading, setLoading] = useState(false);
   const [expenses, setExpenses] = useState([]);
 
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
@@ -31,6 +31,8 @@ function App() {
 
   const reloadMonth = () => {
 
+    setLoading(true);
+
     axios.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
       .then(res => {
 
@@ -41,7 +43,8 @@ function App() {
         }
 
       })
-      .catch(err => console.error(err));
+      .catch(err => console.error(err))
+      .finally(() => setLoading(false));
 
   };
 
@@ -95,7 +98,7 @@ function App() {
 
     setService(exp.service);
 
-    setPrice((exp.amount * exp.numbertimes).toString());
+    setPrice(exp.amount.toString());
 
     const formattedDate = new Date(exp.duedate).toISOString().split('T')[0];
     setDueDate(formattedDate);
@@ -106,7 +109,7 @@ function App() {
 
     setRecurrence(exp.recurrence || "none");
 
-    setEditId(exp.id);
+    setEditId(exp.expense_id);
 
   };
 
@@ -344,31 +347,51 @@ function App() {
 
             <tbody>
 
-              {expenses.map((exp) => (
+              {loading ? (
 
-                <tr key={exp.id}>
-
-                  <td>{exp.service}</td>
-
-                  <td>R$ {exp.amount}</td>
-
-                  <td>{exp.paymentmethod}</td>
-
-                  <td>{exp.installment_number} de {exp.numbertimes}</td>
-
-                  <td>{new Date(exp.duedate).toLocaleDateString('pt-BR')}</td>
-
-                  <td>
-
-                    <button onClick={() => startEditExpense(exp)}>✏️</button>
-
-                    <button onClick={() => removeExpense(exp.id)}>❌</button>
-
+                <tr>
+                  <td colSpan="6" style={{ textAlign: "center", padding: "20px" }}>
+                    ⏳ Carregando despesas...
                   </td>
-
                 </tr>
 
-              ))}
+              ) : expenses.length === 0 ? (
+
+                <tr>
+                  <td colSpan="6" style={{ textAlign: "center" }}>
+                    Nenhum gasto neste mês
+                  </td>
+                </tr>
+
+              ) : (
+
+                expenses.map((exp) => (
+
+                  <tr key={exp.id}>
+
+                    <td>{exp.service}</td>
+
+                    <td>R$ {exp.amount}</td>
+
+                    <td>{exp.paymentmethod}</td>
+
+                    <td>{exp.installment_number} de {exp.numbertimes}</td>
+
+                    <td>{new Date(exp.duedate).toLocaleDateString('pt-BR')}</td>
+
+                    <td>
+
+                      <button onClick={() => startEditExpense(exp)}>✏️</button>
+
+                      <button onClick={() => removeExpense(exp.expense_id)}>❌</button>
+
+                    </td>
+
+                  </tr>
+
+                ))
+
+              )}
 
             </tbody>
 

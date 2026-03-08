@@ -2,7 +2,6 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { Pool } = require("pg");
-const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 
@@ -13,13 +12,6 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
-
-
-function addMonths(date, months) {
-  const d = new Date(date);
-  d.setMonth(d.getMonth() + months);
-  return d.toISOString().split("T")[0];
-}
 
 
 function generateDate(baseDate, recurrence, index) {
@@ -39,10 +31,10 @@ function generateDate(baseDate, recurrence, index) {
   }
 
   else {
-    d = new Date(addMonths(baseDate, index));
+    d.setMonth(d.getMonth() + index);
   }
 
-  return d.toISOString().split("T")[0];
+  return d;
 }
 
 
@@ -57,55 +49,65 @@ function totalInstallments(numTimes, recurrence){
 }
 
 
+
 app.post("/expenses", async (req, res) => {
+
   try {
 
-    const { service, price, paymentMethod, recurrence, dueDate } = req.body;
+    const {
+      service,
+      price,
+      paymentMethod,
+      numberTimes,
+      dueDate,
+      recurrence
+    } = req.body;
 
-    const startDate = new Date(dueDate);
+    const numTimes = parseInt(numberTimes || 1);
 
-    let repetitions = 1;
+    const expense = await pool.query(
+      `INSERT INTO expenses
+      (service, price, paymentmethod, numbertimes, duedate, recurrence)
+      VALUES ($1,$2,$3,$4,$5,$6)
+      RETURNING *`,
+      [service, price, paymentMethod, numTimes, dueDate, recurrence]
+    );
 
-    if (recurrence === "monthly") repetitions = 12;
-    if (recurrence === "weekly") repetitions = 52;
-    if (recurrence === "yearly") repetitions = 5;
+    const expenseId = expense.rows[0].id;
 
-    const created = [];
+    const parcelaValor = price / numTimes;
 
-    for (let i = 0; i < repetitions; i++) {
+    const total = totalInstallments(numTimes, recurrence);
 
-      const newDate = new Date(startDate);
+    for (let i = 0; i < total; i++) {
 
-      if (recurrence === "monthly") {
-        newDate.setMonth(startDate.getMonth() + i);
-      }
+      const vencimento = generateDate(dueDate, recurrence, i);
 
-      if (recurrence === "weekly") {
-        newDate.setDate(startDate.getDate() + (i * 7));
-      }
+      await pool.query(
 
-      if (recurrence === "yearly") {
-        newDate.setFullYear(startDate.getFullYear() + i);
-      }
+        `INSERT INTO installments
+        (expense_id, installment_number, amount, duedate)
+        VALUES ($1,$2,$3,$4)`,
 
-      const result = await pool.query(
-        `INSERT INTO expenses 
-        (service, price, paymentmethod, duedate, recurrence)
-        VALUES ($1,$2,$3,$4,$5)
-        RETURNING *`,
-        [service, price, paymentMethod, newDate, recurrence]
+        [expenseId, i + 1, parcelaValor, vencimento]
+
       );
 
-      created.push(result.rows[0]);
     }
 
-    res.json(created);
+    res.json({message:"Despesa criada"});
 
-  } catch (err) {
+  }
+
+  catch (err) {
+
     console.error(err);
     res.status(500).send("Erro ao adicionar despesa");
+
   }
+
 });
+
 
 
 app.put("/expenses/:id", async (req, res) => {
@@ -128,10 +130,10 @@ app.put("/expenses/:id", async (req, res) => {
     await pool.query(
 
       `UPDATE expenses
-      SET service=$1, price=$2, paymentmethod=$3, numbertimes=$4, recurrence=$5
-      WHERE id=$6`,
+      SET service=$1, price=$2, paymentmethod=$3, numbertimes=$4, duedate=$5, recurrence=$6
+      WHERE id=$7`,
 
-      [service, price, paymentMethod, numTimes, recurrence, id]
+      [service, price, paymentMethod, numTimes, dueDate, recurrence, id]
 
     );
 
@@ -177,6 +179,7 @@ app.put("/expenses/:id", async (req, res) => {
 });
 
 
+
 app.get("/expenses/month/:year/:month", async (req, res) => {
 
   try {
@@ -185,7 +188,16 @@ app.get("/expenses/month/:year/:month", async (req, res) => {
 
     const result = await pool.query(
 
-      `SELECT i.*, e.service, e.paymentmethod, e.numbertimes, e.recurrence
+      `SELECT 
+        i.id,
+        i.installment_number,
+        i.amount,
+        i.duedate,
+        e.service,
+        e.paymentmethod,
+        e.numbertimes,
+        e.recurrence,
+        e.id as expense_id
        FROM installments i
        JOIN expenses e ON e.id = i.expense_id
        WHERE EXTRACT(YEAR FROM i.duedate) = $1
@@ -210,13 +222,16 @@ app.get("/expenses/month/:year/:month", async (req, res) => {
 });
 
 
+
 app.delete("/expenses/:id", async (req, res) => {
 
   try {
 
     const { id } = req.params;
 
-    await pool.query("DELETE FROM expenses WHERE id=$1", [id]);
+    await pool.query("DELETE FROM installments WHERE expense_id=$1",[id]);
+
+    await pool.query("DELETE FROM expenses WHERE id=$1",[id]);
 
     res.json({ message: "Removido" });
 
