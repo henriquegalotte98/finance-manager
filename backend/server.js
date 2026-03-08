@@ -59,21 +59,21 @@ function totalInstallments(numTimes, recurrence){
 
 app.post("/expenses", async (req, res) => {
   try {
+
     const { service, price, paymentMethod, recurrence, dueDate } = req.body;
 
     const startDate = new Date(dueDate);
 
-    // Quantas repetições criar
-    let totalOccurrences = 1;
+    let repetitions = 1;
 
-    if (recurrence === "monthly") totalOccurrences = 12;
-    if (recurrence === "weekly") totalOccurrences = 52;
-    if (recurrence === "yearly") totalOccurrences = 5;
-    if (recurrence === "none") totalOccurrences = 1;
+    if (recurrence === "monthly") repetitions = 12;
+    if (recurrence === "weekly") repetitions = 52;
+    if (recurrence === "yearly") repetitions = 5;
 
-    const createdExpenses = [];
+    const created = [];
 
-    for (let i = 0; i < totalOccurrences; i++) {
+    for (let i = 0; i < repetitions; i++) {
+
       const newDate = new Date(startDate);
 
       if (recurrence === "monthly") {
@@ -81,7 +81,7 @@ app.post("/expenses", async (req, res) => {
       }
 
       if (recurrence === "weekly") {
-        newDate.setDate(startDate.getDate() + i * 7);
+        newDate.setDate(startDate.getDate() + (i * 7));
       }
 
       if (recurrence === "yearly") {
@@ -89,16 +89,17 @@ app.post("/expenses", async (req, res) => {
       }
 
       const result = await pool.query(
-        `INSERT INTO expenses (service, price, paymentmethod, duedate, recurrence)
-         VALUES ($1,$2,$3,$4,$5)
-         RETURNING *`,
+        `INSERT INTO expenses 
+        (service, price, paymentmethod, duedate, recurrence)
+        VALUES ($1,$2,$3,$4,$5)
+        RETURNING *`,
         [service, price, paymentMethod, newDate, recurrence]
       );
 
-      createdExpenses.push(result.rows[0]);
+      created.push(result.rows[0]);
     }
 
-    res.json(createdExpenses);
+    res.json(created);
 
   } catch (err) {
     console.error(err);
