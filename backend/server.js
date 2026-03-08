@@ -58,66 +58,52 @@ function totalInstallments(numTimes, recurrence){
 
 
 app.post("/expenses", async (req, res) => {
-
   try {
+    const { service, price, paymentMethod, recurrence, dueDate } = req.body;
 
-    const groupId = uuidv4();
+    const startDate = new Date(dueDate);
 
-    const {
-      service,
-      price,
-      paymentMethod,
-      numberTimes,
-      dueDate,
-      recurrence
-    } = req.body;
+    // Quantas repetições criar
+    let totalOccurrences = 1;
 
-    const numTimes = parseInt(numberTimes);
+    if (recurrence === "monthly") totalOccurrences = 12;
+    if (recurrence === "weekly") totalOccurrences = 52;
+    if (recurrence === "yearly") totalOccurrences = 5;
+    if (recurrence === "none") totalOccurrences = 1;
 
-    const result = await pool.query(
+    const createdExpenses = [];
 
-      `INSERT INTO expenses
-      (service, price, paymentmethod, numbertimes, recurrence, expense_group_id)
-      VALUES ($1,$2,$3,$4,$5,$6)
-      RETURNING *`,
+    for (let i = 0; i < totalOccurrences; i++) {
+      const newDate = new Date(startDate);
 
-      [service, price, paymentMethod, numTimes, recurrence, groupId]
+      if (recurrence === "monthly") {
+        newDate.setMonth(startDate.getMonth() + i);
+      }
 
-    );
+      if (recurrence === "weekly") {
+        newDate.setDate(startDate.getDate() + i * 7);
+      }
 
-    const expense = result.rows[0];
+      if (recurrence === "yearly") {
+        newDate.setFullYear(startDate.getFullYear() + i);
+      }
 
-    const parcelaValor = price / numTimes;
-
-    const total = totalInstallments(numTimes, recurrence);
-
-    for (let i = 0; i < total; i++) {
-
-      const vencimento = generateDate(dueDate, recurrence, i);
-
-      await pool.query(
-
-        `INSERT INTO installments
-        (expense_id, installment_number, amount, duedate)
-        VALUES ($1,$2,$3,$4)`,
-
-        [expense.id, i + 1, parcelaValor, vencimento]
-
+      const result = await pool.query(
+        `INSERT INTO expenses (service, price, paymentmethod, duedate, recurrence)
+         VALUES ($1,$2,$3,$4,$5)
+         RETURNING *`,
+        [service, price, paymentMethod, newDate, recurrence]
       );
 
+      createdExpenses.push(result.rows[0]);
     }
 
-    res.json(expense);
+    res.json(createdExpenses);
 
-  }
-
-  catch (err) {
-
+  } catch (err) {
     console.error(err);
     res.status(500).send("Erro ao adicionar despesa");
-
   }
-
 });
 
 
