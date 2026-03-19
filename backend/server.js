@@ -1,17 +1,113 @@
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const { Pool } = require("pg");
+import dotenv from "dotenv"
+
+dotenv.config()
+
+import coupleRoutes from "./routes/couple.routes.js"
+import { getUserCoupleId } from "./utils/getUserCouple.js"
+import authRoutes from "./routes/auth.routes.js"
+import expensesRoutes from "./routes/expenses.routes.js"
+import express from "express"
+import cors from "cors"
+import pkg from "pg"
+import bodyParser from "body-parser"
+import { pool } from "./db.js"
+import multer from "multer";
+import path from "path";
+import { fileURLToPath } from "url";
+
 
 const app = express();
 
+
 app.use(cors());
+
+app.use(express.json());
+app.use("/expenses", expensesRoutes);
+app.use("/couple", coupleRoutes);
+app.use("/auth", authRoutes);
+
 app.use(bodyParser.json());
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+// Necessário para resolver o caminho absoluto
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Servir a pasta uploads como estática
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+
+
+console.log("DATABASE_URL =", process.env.DATABASE_URL)
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, "uploads/"),
+  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
 });
+const upload = multer({ storage });
+
+app.get("/users/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      `SELECT u.id, u.name, u.email, a.caminho
+       FROM users u
+       LEFT JOIN arquivos a ON u.profile_image_id = a.id
+       WHERE u.id=$1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Usuário não encontrado" });
+    }
+
+    // Corrige as barras invertidas
+    const user = result.rows[0];
+    if (user.caminho) {
+      user.caminho = user.caminho.replace(/\\/g, "/");
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erro ao buscar usuário" });
+  }
+});
+
+app.post("/upload", upload.single("file"), async (req, res) => {
+  try {
+    const userId = req.body.userId; // ou req.user.id, dependendo da sua lógica
+
+    // 1. Descobre a imagem antiga
+    const oldImageResult = await pool.query(
+      "SELECT profile_image_id FROM users WHERE id=$1",
+      [userId]
+    );
+    const oldImageId = oldImageResult.rows[0].profile_image_id;
+
+    // 2. Salva o novo arquivo
+    const result = await pool.query(
+      "INSERT INTO arquivos (nome, caminho) VALUES ($1, $2) RETURNING id",
+      [req.file.originalname, req.file.path]
+    );
+    const novoArquivoId = result.rows[0].id;
+
+    // depois de inserir o novo arquivo
+    await pool.query("UPDATE users SET profile_image_id=$1 WHERE id=$2", [novoArquivoId, userId]);
+
+    // só depois de atualizar o usuário, você pode apagar o antigo
+    if (oldImageId) {
+      await pool.query("DELETE FROM arquivos WHERE id=$1", [oldImageId]);
+    }
+
+    res.json({ success: true, novoArquivoId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erro no upload" });
+  }
+});
+
+
+
 
 
 function generateDate(baseDate, recurrence, index) {
@@ -333,4 +429,21 @@ app.listen(PORT, () => {
 
   console.log(`Servidor rodando na porta ${PORT}`);
 
+});
+
+
+app.put("/users/:id/profile-image", async (req, res) => {
+  const { id } = req.params;
+  const { imageId } = req.body; // id da tabela arquivos
+
+  try {
+    await pool.query(
+      "UPDATE users SET profile_image_id=$1 WHERE id=$2",
+      [imageId, id]
+    );
+    res.json({ message: "Foto de perfil atualizada!" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Erro ao atualizar foto de perfil");
+  }
 });

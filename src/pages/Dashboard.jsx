@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import ChartMonthly from "./ChartMonthly";
-import Alerts from "./Alerts";
-import CalendarBills from "./CalendarBills";
+import ChartMonthly from "../components/ChartMonthly";
+import Alerts from "../components/Alerts";
+import CalendarBills from "../components/CalendarBills";
 
 function Dashboard({ API_URL }) {
 

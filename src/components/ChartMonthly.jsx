@@ -2,71 +2,68 @@ import { Bar } from "react-chartjs-2";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL;
-
-
 import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    LineElement,
-    PointElement,
-    Title,
-    Tooltip,
-    Legend
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend
 } from "chart.js";
 
 ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    LineElement,
-    PointElement,
-    Title,
-    Tooltip,
-    Legend
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend
 );
 
+export default function ChartMonthly() {
 
+  const API_URL = import.meta.env.VITE_API_URL;
 
-export default function ChartMonthly({ API_URL }) {
+  const [data, setData] = useState(null);
 
-    const [data, setData] = useState(null);
+  useEffect(() => {
 
-    useEffect(() => {
+    axios.get(`${API_URL}/dashboard/monthly`)
+      .then(res => {
 
-        axios.get(`${API_URL}/dashboard/monthly`)
-            .then(res => {
+        if (!Array.isArray(res.data)) {
+          console.warn("Resposta inesperada:", res.data);
+          setData(null);
+          return;
+        }
 
-                if (!Array.isArray(res.data)) {
-                    console.warn("Resposta inesperada:", res.data);
-                    setData(null);
-                    return;
-                }
+        const labels = res.data.map(i => i.month);
+        const values = res.data.map(i => i.total);
 
-                const labels = res.data.map(i => i.month);
-                const values = res.data.map(i => i.total);
+        setData({
+          labels,
+          datasets: [
+            {
+              label: "Gastos por mês",
+              data: values
+            }
+          ]
+        });
 
-                setData({
-                    labels,
-                    datasets: [
-                        {
-                            label: "Gastos por mês",
-                            data: values
-                        }
-                    ]
-                });
+      })
+      .catch(err => {
+        console.error(err);
+        setData(null);
+      });
 
-            })
-            .catch(err => {
-                console.error(err);
-                setData(null);
-            });
+  }, []);
 
-    }, [API_URL]);
+  if (!data) return <p>Carregando gráfico...</p>;
 
-    if (!data) return <p>Carregando gráfico...</p>;
-
-    return <Bar data={data} />;
+  return <Bar data={data} />;
 }

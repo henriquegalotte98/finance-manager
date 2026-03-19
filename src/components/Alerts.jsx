@@ -20,20 +20,18 @@ export default function Alerts({ API_URL }) {
     if (!alerts.length) {
         return <p>Nenhuma conta vencendo</p>;
     }
+    if (!Array.isArray(alerts)) {
+        return null
+    }
 
+    
     return (
 
         <div>
 
             <h3>⚠ Contas vencendo</h3>
 
-            {alerts.map((a, i) => (
 
-                <div key={i}>
-                    {a.service} - R$ {a.amount} - {new Date(a.duedate).toLocaleDateString("pt-BR")}
-                </div>
-
-            ))}
 
         </div>
 

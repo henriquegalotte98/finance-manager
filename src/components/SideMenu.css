@@ -1,0 +1,113 @@
+.side_menu {
+  color: #fff;
+  height: 100vh;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  width: 80px;
+  height: 90vh;
+  min-height: 399px;
+  margin-right: 10px;
+
+  transition: 0.4s ease-out;
+  
+  
+  background: rgba(26, 26, 26, 0.85);
+
+  border-radius: 80px;
+
+  backdrop-filter: blur(14.6px);
+  -webkit-backdrop-filter: blur(4.6px);
+}
+
+.profile-pic{
+  width: 80px;
+  height: 80px;
+  border-radius: 40px;
+  object-fit: cover;
+  
+
+
+}
+.side_menu h2 {
+  margin-bottom: 20px;
+}
+
+.side_menu ul {
+  height: 100%;
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.side_menu li {
+  margin: 0;
+  padding: 10px;
+
+}
+
+.side_menu a {
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.side_menu a:hover {
+  text-decoration: underline;
+}
+
+.side_menu nav {
+  height: 100%;
+}
+
+
+
+/*CSS do copilot*/
+
+/* Side menu */
+.side_menu {
+  color: #fff;
+  padding: 20px 10px;
+  display: flex;
+  flex-direction: column;
+  width: 110px;
+  height: 100%;
+  
+  transition: 0.4s ease-out;
+  background: rgba(26, 26, 26, 0.85);
+  border-radius: 120px;
+  backdrop-filter: blur(14.6px);
+  -webkit-backdrop-filter: blur(4.6px);
+}
+
+
+
+.side_menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.side_menu li {
+  margin: 0;
+  padding: 10px;
+}
+
+.side_menu a {
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.side_menu a:hover {
+  text-decoration: underline;
+}
+
