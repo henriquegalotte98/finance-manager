@@ -11,12 +11,24 @@ function Login() {
 
   const handleLogin = async (e) => {
   e.preventDefault();
-  const res = await axios.post("http://localhost:3000/auth/login", {
-    email,
-    password,
-  });
-  login(res.data.token, res.data.user); // ✅ passa token e user
-  navigate("/app");
+  try {
+    const res = await axios.post("http://localhost:3000/auth/login", {
+      email,
+      password,
+    });
+
+    // Salva o userId e o token no localStorage
+    localStorage.setItem("userId", res.data.user.id);
+    localStorage.setItem("token", res.data.token);
+
+    // Continua usando o AuthContext
+    login(res.data.token, res.data.user);
+
+    // Redireciona para o app
+    navigate("/app");
+  } catch (err) {
+    console.error("Erro no login:", err);
+  }
 };
 
   return (

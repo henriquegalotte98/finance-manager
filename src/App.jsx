@@ -19,20 +19,23 @@ function AppRoutes() {
 
   return (
     <Routes>
+      {/* Rota de login */}
       <Route path="/login" element={!token ? <Login /> : <Navigate to="/app" />} />
+
+      {/* Rota principal protegida */}
       <Route
         path="/app/*"
         element={
-          token ? (
+          <PrivateRoute>
             <div className="app_container">
               <div className="side_menu_container">
                 <SideMenu />
               </div>
               <div className="app">
                 <Routes>
+                  <Route path="" element={<Dashboard API_URL={import.meta.env.VITE_API_URL} />} />
                   <Route path="importfile" element={<ImportFile />} />
-                  <Route path="profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-                  <Route path="" element={<Dashboard />} />
+                  <Route path="profile" element={<Profile />} />
                   <Route path="excel" element={<Excel />} />
                   <Route path="market" element={<Market />} />
                   <Route path="economias" element={<Economias />} />
@@ -40,16 +43,15 @@ function AppRoutes() {
                 </Routes>
               </div>
             </div>
-          ) : (
-            <Navigate to="/login" />
-          )
+          </PrivateRoute>
         }
       />
+
+      {/* Redirecionamento padrão */}
       <Route path="*" element={<Navigate to={token ? "/app" : "/login"} />} />
     </Routes>
   );
 }
-
 
 function App() {
   return (
@@ -60,6 +62,5 @@ function App() {
     </BrowserRouter>
   );
 }
-
 
 export default App;
