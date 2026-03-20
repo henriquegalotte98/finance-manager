@@ -52,7 +52,13 @@ function ImportFile() {
   return (
     <div>
       <input type="file" onChange={aoSelecionar} />
-      <button type="button" onClick={aoEnviar}>Enviar</button>
+      <button
+        type="button"
+        onClick={aoEnviar}
+        disabled={!user}
+      >
+        Enviar
+      </button>
     </div>
   );
 }
