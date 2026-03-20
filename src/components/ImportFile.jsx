@@ -1,18 +1,21 @@
 import { useState } from "react";
 import { useAuth } from "./AuthContext";
+import { api } from "../services/api";
 
 function ImportFile() {
   const [selectedFile, setSelectedFile] = useState(null);
   const { user, setUser } = useAuth();
 
   const aoSelecionar = (event) => {
-    setSelectedFile(event.target.files[0]);
-    console.log("Arquivo selecionado:", event.target.files[0]);
+    const file = event.target.files[0];
+    setSelectedFile(file);
+    console.log("Arquivo selecionado:", file);
   };
 
   const aoEnviar = async () => {
-    console.log("aoEnviar chamado"); // ✅ teste
+    console.log("aoEnviar chamado");
     console.log("User no contexto:", user);
+
     if (!selectedFile || !user) {
       console.warn("Nenhum arquivo ou usuário definido");
       return;
@@ -23,17 +26,23 @@ function ImportFile() {
     formData.append("userId", user.id);
 
     try {
-      const response = await fetch("http://localhost:3000/upload", {
-        method: "POST",
-        body: formData,
+      // ✅ USANDO API CENTRALIZADA (resolve localhost)
+      const response = await api.post("/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
-      const data = await response.json();
-      console.log("Upload concluído:", data);
 
-      const userResponse = await fetch(`http://localhost:3000/users/${user.id}`);
-      const updatedUser = await userResponse.json();
+      console.log("Upload concluído:", response.data);
+
+      // 🔄 Atualiza usuário
+      const userResponse = await api.get(`/users/${user.id}`);
+      const updatedUser = userResponse.data;
+
       setUser(updatedUser);
-      console.log("User no contexto:", user);
+
+      console.log("User atualizado:", updatedUser);
+
     } catch (err) {
       console.error("Erro no upload:", err);
     }
