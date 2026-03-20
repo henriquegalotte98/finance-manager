@@ -8,7 +8,7 @@ import Economias from "./components/Economias.jsx";
 import PrivateRoute from "./components/PrivateRoute.jsx";
 import Market from "./components/Market";
 import Travel from "./components/Travel";
-import SideMenu from "./components/SideMenu"; 
+import SideMenu from "./components/SideMenu";
 import { AuthProvider } from "./components/AuthContext.jsx";
 import { useAuth } from "./components/AuthContext.jsx";
 
@@ -20,9 +20,7 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Rota de login */}
-      <Route path="/login" element={!token ? <Login /> : <Navigate to="/app" />} />
-
-      {/* Rota principal protegida */}
+      <Route path="/login" element={<Login />} />
       <Route
         path="/app/*"
         element={
