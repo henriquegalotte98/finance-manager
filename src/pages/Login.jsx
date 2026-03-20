@@ -10,26 +10,26 @@ function Login() {
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-  e.preventDefault();
-  try {
-    const res = await axios.post("http://localhost:3000/auth/login", {
-      email,
-      password,
-    });
+    e.preventDefault();
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
+        email,
+        password,
+      });
 
-    // Salva o userId e o token no localStorage
-    localStorage.setItem("userId", res.data.user.id);
-    localStorage.setItem("token", res.data.token);
+      // Salva o userId e o token no localStorage
+      localStorage.setItem("userId", res.data.user.id);
+      localStorage.setItem("token", res.data.token);
 
-    // Continua usando o AuthContext
-    login(res.data.token, res.data.user);
+      // Continua usando o AuthContext
+      login(res.data.token, res.data.user);
 
-    // Redireciona para o app
-    navigate("/app");
-  } catch (err) {
-    console.error("Erro no login:", err);
-  }
-};
+      // Redireciona para o app
+      navigate("/app");
+    } catch (err) {
+      console.error("Erro no login:", err);
+    }
+  };
 
   return (
     <div className="login-container">
