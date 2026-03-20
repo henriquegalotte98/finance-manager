@@ -1,30 +1,34 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { api } from "../services/api";
 import ChartMonthly from "../components/ChartMonthly";
 import Alerts from "../components/Alerts";
 import CalendarBills from "../components/CalendarBills";
 
-function Dashboard({ API_URL }) {
+function Dashboard() {
   const [monthTotal, setMonthTotal] = useState(0);
 
   const month = new Date().getMonth() + 1;
   const year = new Date().getFullYear();
 
   useEffect(() => {
-    const userId = localStorage.getItem("userId"); // recupera do login
+    const userId = localStorage.getItem("userId");
 
     if (!userId) {
       console.error("Usuário não está logado");
       return;
     }
 
-    axios
-      .get(`${API_URL}/${userId}/dashboard/month-total/${year}/${month}`)
+    console.log("Chamando:", `/dashboard/month-total/${userId}/${year}/${month}`);
+
+    api
+      .get(`/dashboard/month-total/${userId}/${year}/${month}`)
       .then((res) => {
         setMonthTotal(res.data.total || 0);
       })
-      .catch((err) => console.error(err));
-  }, [API_URL, year, month]);
+      .catch((err) => {
+        console.error("Erro ao buscar total:", err);
+      });
+  }, [year, month]);
 
   return (
     <div className="dashboard">
@@ -39,11 +43,11 @@ function Dashboard({ API_URL }) {
 
       <div className="dashboard_grid">
         <div className="dashboard_card">
-          <ChartMonthly API_URL={API_URL} />
+          <ChartMonthly />
         </div>
 
         <div className="dashboard_card">
-          <Alerts API_URL={API_URL} />
+          <Alerts />
         </div>
       </div>
     </div>
