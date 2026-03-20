@@ -6,7 +6,12 @@ export default function Alerts({ API_URL }) {
     const [alerts, setAlerts] = useState([]);
 
     useEffect(() => {
+        if (!userId) {
+            console.error("userId não definido");
+            return;
+        }
 
+        api.get(`/${userId}/dashboard/alerts`);
         axios.get(`${API_URL}/dashboard/alerts`)
             .then(res => {
                 setAlerts(res.data);
@@ -24,7 +29,7 @@ export default function Alerts({ API_URL }) {
         return null
     }
 
-    
+
     return (
 
         <div>

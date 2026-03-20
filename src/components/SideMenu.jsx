@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
-import { useContext } from "react";
-import { AuthContext } from "./AuthContext";
+import { useAuth } from "./AuthContext";
 import "./SideMenu.css";
 
+
 function SideMenu() {
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth(); // pega user do contexto
 
   const menuItems = [
-    { path: "/app/profile", label: "profile" }, // marcador para identificar
+    { path: "/app/profile", label: "profile" },
     { path: "/app", label: "🏠 Início" },
     { path: "/app/excel", label: "📊 Planilha" },
     { path: "/app/market", label: "💵 Dólar" },

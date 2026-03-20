@@ -1,22 +1,31 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useContext } from "react";
 
-export const AuthContext = createContext();
+const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
+  const [token, setToken] = useState(localStorage.getItem("token"));
   const [user, setUser] = useState(null);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const response = await fetch("http://localhost:3000/users/2"); // id do usuário logado
-      const data = await response.json();
-      setUser(data);
-    };
-    fetchUser();
-  }, []);
+  const login = (newToken, userData) => {
+  localStorage.setItem("token", newToken);
+  setToken(newToken);
+  setUser(userData); // ✅ agora o user existe
+};
+
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    setToken(null);
+    setUser(null);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, setUser }}>
+    <AuthContext.Provider value={{ token, user, setUser, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
-}; 
+}
+
+export function useAuth() {
+  return useContext(AuthContext);
+}

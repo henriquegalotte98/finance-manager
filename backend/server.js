@@ -14,12 +14,16 @@ import { pool } from "./db.js"
 import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
-
+import jwt from "jsonwebtoken";
 
 const app = express();
 
 
-app.use(cors());
+app.use(cors({
+  origin: ["https://finance-manager-chi-ashen.vercel.app"], 
+  methods: ["GET", "POST", "PUT", "DELETE"],
+}));
+
 
 app.use(express.json());
 app.use("/expenses", expensesRoutes);
@@ -75,33 +79,48 @@ app.get("/users/:id", async (req, res) => {
 
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
-    const userId = req.body.userId; // ou req.user.id, dependendo da sua lógica
+    console.log("req.file:", req.file);
+    console.log("req.body:", req.body);
 
-    // 1. Descobre a imagem antiga
+    if (!req.file) {
+      return res.status(400).json({ error: "Nenhum arquivo enviado" });
+    }
+
+    const userId = req.body.userId;
+    if (!userId) {
+      return res.status(400).json({ error: "userId não informado" });
+    }
+
+    console.log("Arquivo recebido:", req.file);
+    console.log("UserId recebido:", userId);
+
     const oldImageResult = await pool.query(
       "SELECT profile_image_id FROM users WHERE id=$1",
       [userId]
     );
-    const oldImageId = oldImageResult.rows[0].profile_image_id;
+    const oldImageId = oldImageResult.rows[0]?.profile_image_id;
 
-    // 2. Salva o novo arquivo
     const result = await pool.query(
       "INSERT INTO arquivos (nome, caminho) VALUES ($1, $2) RETURNING id",
-      [req.file.originalname, req.file.path]
+      [req.file.originalname, req.file.path.replace(/\\/g, "/")]
     );
     const novoArquivoId = result.rows[0].id;
 
-    // depois de inserir o novo arquivo
-    await pool.query("UPDATE users SET profile_image_id=$1 WHERE id=$2", [novoArquivoId, userId]);
+    await pool.query("UPDATE users SET profile_image_id=$1 WHERE id=$2", [
+      novoArquivoId,
+      userId,
+    ]);
 
-    // só depois de atualizar o usuário, você pode apagar o antigo
     if (oldImageId) {
       await pool.query("DELETE FROM arquivos WHERE id=$1", [oldImageId]);
     }
 
     res.json({ success: true, novoArquivoId });
   } catch (err) {
-    console.error(err);
+    console.log("req.file:", req.file);
+    console.log("req.body:", req.body);
+
+    console.error("Erro no upload:", err);
     res.status(500).json({ error: "Erro no upload" });
   }
 });
@@ -144,6 +163,41 @@ function totalInstallments(numTimes, recurrence) {
 
 }
 
+
+
+app.get("/users/me", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: "Token não fornecido" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const result = await pool.query(
+      `SELECT u.id, u.name, u.email, a.caminho
+       FROM users u
+       LEFT JOIN arquivos a ON u.profile_image_id = a.id
+       WHERE u.id=$1`,
+      [decoded.userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Usuário não encontrado" });
+    }
+
+    const user = result.rows[0];
+    if (user.caminho) {
+      user.caminho = user.caminho.replace(/\\/g, "/");
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.error("Erro em /users/me:", err);
+    res.status(500).json({ error: "Erro ao buscar usuário" });
+  }
+});
 
 
 app.post("/expenses", async (req, res) => {

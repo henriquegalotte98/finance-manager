@@ -1,13 +1,16 @@
 
 import ImportFile from "./ImportFile";
+import LogoutButton from "./LogoutButton";
 
 function Profile(){
 
     
 
     return(
-        <ImportFile />
-        
+        <div>
+            <ImportFile />
+            <LogoutButton />
+        </div>
     )
 }
 

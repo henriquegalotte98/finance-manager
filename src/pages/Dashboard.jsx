@@ -12,6 +12,10 @@ function Dashboard({ API_URL }) {
   const year = new Date().getFullYear();
 
   useEffect(() => {
+    if (!userId || !ano || !mes) {
+      console.error("Parâmetros não definidos");
+      return;
+    }
 
     axios
       .get(`${API_URL}/dashboard/month-total/${year}/${month}`)
@@ -24,34 +28,34 @@ function Dashboard({ API_URL }) {
 
   return (
 
-  <div className="dashboard">
+    <div className="dashboard">
 
-    <h1>Dashboard Financeiro</h1>
+      <h1>Dashboard Financeiro</h1>
 
-    <div className="dashboard_cards">
+      <div className="dashboard_cards">
 
-      <div className="dashboard_card">
-        <h3>Total do mês</h3>
-        <h2>R$ {monthTotal}</h2>
+        <div className="dashboard_card">
+          <h3>Total do mês</h3>
+          <h2>R$ {monthTotal}</h2>
+        </div>
+
+      </div>
+
+      <div className="dashboard_grid">
+
+        <div className="dashboard_card">
+          <ChartMonthly API_URL={API_URL} />
+        </div>
+
+        <div className="dashboard_card">
+          <Alerts API_URL={API_URL} />
+        </div>
+
       </div>
 
     </div>
 
-    <div className="dashboard_grid">
-
-      <div className="dashboard_card">
-        <ChartMonthly API_URL={API_URL} />
-      </div>
-
-      <div className="dashboard_card">
-        <Alerts API_URL={API_URL} />
-      </div>
-
-    </div>
-
-  </div>
-
-);
+  );
 }
 
 export default Dashboard;
