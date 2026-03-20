@@ -11,17 +11,10 @@ function Dashboard() {
   const year = new Date().getFullYear();
 
   useEffect(() => {
-    const userId = localStorage.getItem("userId");
-
-    if (!userId) {
-      console.error("Usuário não está logado");
-      return;
-    }
-
-    console.log("Chamando:", `/dashboard/month-total/${userId}/${year}/${month}`);
+    console.log("Chamando:", `/dashboard/month-total/${year}/${month}`);
 
     api
-      .get(`/dashboard/month-total/${userId}/${year}/${month}`)
+      .get(`/dashboard/month-total/${year}/${month}`)
       .then((res) => {
         setMonthTotal(res.data.total || 0);
       })

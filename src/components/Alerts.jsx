@@ -1,32 +1,26 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { api } from "../services/api";
 
-export default function Alerts({ API_URL }) {
+export default function Alerts() {
   const [alerts, setAlerts] = useState([]);
 
   useEffect(() => {
-    const userId = localStorage.getItem("userId"); // recupera do login
+    console.log("Chamando: /dashboard/alerts");
 
-    if (!userId) {
-      console.error("userId não definido");
-      return;
-    }
-
-    axios
-      .get(`${API_URL}/${userId}/dashboard/alerts`)
-      .then(res => {
+    api
+      .get("/dashboard/alerts")
+      .then((res) => {
         setAlerts(res.data);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Erro ao buscar alerts:", err);
       });
-  }, [API_URL]);
+  }, []);
+
+  if (!Array.isArray(alerts)) return null;
 
   if (!alerts.length) {
     return <p>Nenhuma conta vencendo</p>;
-  }
-  if (!Array.isArray(alerts)) {
-    return null;
   }
 
   return (
@@ -34,7 +28,9 @@ export default function Alerts({ API_URL }) {
       <h3>⚠ Contas vencendo</h3>
       <ul>
         {alerts.map((alert, i) => (
-          <li key={i}>{alert.message}</li>
+          <li key={i}>
+            {alert.service} - R$ {alert.amount}
+          </li>
         ))}
       </ul>
     </div>

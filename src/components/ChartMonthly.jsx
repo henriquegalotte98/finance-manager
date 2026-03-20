@@ -1,6 +1,6 @@
 import { Bar } from "react-chartjs-2";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { api } from "../services/api";
 
 import {
   Chart as ChartJS,
@@ -26,16 +26,11 @@ ChartJS.register(
 );
 
 export default function ChartMonthly() {
-
-  const API_URL = import.meta.env.VITE_API_URL;
-
   const [data, setData] = useState(null);
 
   useEffect(() => {
-
-    axios.get(`${API_URL}/dashboard/monthly`)
+    api.get("/dashboard/monthly")
       .then(res => {
-
         if (!Array.isArray(res.data)) {
           console.warn("Resposta inesperada:", res.data);
           setData(null);
@@ -54,13 +49,11 @@ export default function ChartMonthly() {
             }
           ]
         });
-
       })
       .catch(err => {
         console.error(err);
         setData(null);
       });
-
   }, []);
 
   if (!data) return <p>Carregando gráfico...</p>;

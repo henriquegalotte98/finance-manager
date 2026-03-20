@@ -31,7 +31,7 @@ function AppRoutes() {
               </div>
               <div className="app">
                 <Routes>
-                  <Route path="" element={<Dashboard API_URL={import.meta.env.VITE_API_URL} />} />
+                  <Route path="" element={<Dashboard />} />
                   <Route path="importfile" element={<ImportFile />} />
                   <Route path="profile" element={<Profile />} />
                   <Route path="excel" element={<Excel />} />
