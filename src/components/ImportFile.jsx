@@ -32,7 +32,7 @@ function ImportFile() {
           "Content-Type": "multipart/form-data",
         },
       });
-
+      console.log("Token:", localStorage.getItem("token"));
       console.log("Upload concluído:", response.data);
 
       // 🔄 Atualiza usuário
@@ -44,6 +44,7 @@ function ImportFile() {
       console.log("User atualizado:", updatedUser);
 
     } catch (err) {
+      console.log("Token:", localStorage.getItem("token"));
       console.error("Erro no upload:", err);
     }
   };

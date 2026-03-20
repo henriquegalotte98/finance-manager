@@ -1,31 +1,31 @@
-import { createContext, useState, useContext } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import { api } from "../services/api";
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(localStorage.getItem("token"));
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem("token"));
 
-  const login = (newToken, userData) => {
-  localStorage.setItem("token", newToken);
-  setToken(newToken);
-  setUser(userData); // ✅ agora o user existe
-};
-
-
-  const logout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
-    setUser(null);
-  };
+  // 🔥 CARREGAR USUÁRIO AUTOMATICAMENTE
+  useEffect(() => {
+    if (token) {
+      api.get("/users/me")
+        .then(res => {
+          setUser(res.data);
+        })
+        .catch(err => {
+          console.error("Erro ao carregar usuário:", err);
+          setUser(null);
+        });
+    }
+  }, [token]);
 
   return (
-    <AuthContext.Provider value={{ token, user, setUser, login, logout }}>
+    <AuthContext.Provider value={{ user, setUser, token, setToken }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export const useAuth = () => useContext(AuthContext);
