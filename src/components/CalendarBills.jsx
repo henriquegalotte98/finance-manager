@@ -1,6 +1,6 @@
 import Calendar from "react-calendar"
 import { useEffect,useState } from "react"
-import axios from "axios"
+
 import api from "../services/api"
 
 export default function CalendarBills({API_URL}){
