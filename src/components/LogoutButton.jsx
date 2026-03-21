@@ -2,11 +2,7 @@ import { useAuth } from "./AuthContext";
 import { useNavigate } from "react-router-dom";
 
 function LogoutButton() {
-  const logout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
-    setUser(null);
-  };
+  const { logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -14,12 +10,7 @@ function LogoutButton() {
     navigate("/login");
   };
 
-  return <button onClick={() => {
-    logout();
-    navigate("/login");
-  }}>
-    Sair
-  </button>;
+  return <button onClick={logout}>Sair</button>;
 }
 
 export default LogoutButton;
