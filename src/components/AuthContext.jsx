@@ -20,13 +20,11 @@ export function AuthProvider({ children }) {
     }
   }, [token]);
 
-  // ✅ ADICIONA ISSO
-  const logout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
-    setUser(null);
-    window.location.href = "/login";
-  };
+ const logout = () => {
+  localStorage.removeItem("token");
+  setToken(null);
+  setUser(null);
+};
 
   return (
     <AuthContext.Provider value={{ user, setUser, token, setToken, logout }}>
