@@ -2,6 +2,7 @@ import express from "express";
 import bcrypt from "bcrypt";
 import { pool } from "../db.js";
 import { authMiddleware } from "../middleware/auth.js";
+import { getDestinationTheme } from "../utils/destinationTheme.js";
 
 const router = express.Router();
 
@@ -584,8 +585,14 @@ router.get("/travel/:planId/insights", authMiddleware, async (req, res) => {
     const hotelNight = hotelApiNight || hotelFallbackNight;
     const hotelTotal = hotelNight * nights;
 
+    const theme = getDestinationTheme(destination);
+
     res.json({
       destination,
+      theme: {
+        label: theme.label,
+        accent: theme.accent
+      },
       transportPreview: {
         mode,
         tripMonth,
@@ -593,11 +600,7 @@ router.get("/travel/:planId/insights", authMiddleware, async (req, res) => {
         estimatedPricePerPerson: estimate,
         estimatedPriceCouple: estimate * 2
       },
-      media: {
-        destinationPhoto: `https://picsum.photos/seed/${destinationEncoded}-destination/1200/700`,
-        foodPhoto: `https://picsum.photos/seed/${destinationEncoded}-food/1200/700`,
-        activitiesPhoto: `https://picsum.photos/seed/${destinationEncoded}-activities/1200/700`
-      },
+      media: theme.media,
       accommodationPreview: {
         checkIn,
         checkOut,
@@ -633,18 +636,16 @@ router.get("/travel/:planId/insights", authMiddleware, async (req, res) => {
           title: "Passeios e atividades",
           links: [googleSearch(searchQueries.tours), googleSearch(searchQueries.mapActivities)],
           suggestions: [
-            "Faça um passeio guiado no centro histórico.",
-            "Reserve um período para atrações ao ar livre.",
-            "Inclua uma atividade noturna com avaliação alta."
+            ...theme.activityHighlights,
+            "Dica extra: reserve com antecedência em alta temporada."
           ]
         },
         food: {
           title: "Alimentação",
           links: [googleSearch(searchQueries.food), googleSearch(searchQueries.restaurants)],
           suggestions: [
-            "Monte uma lista de 3 restaurantes por faixa de preço.",
-            "Prove pratos típicos em locais bem avaliados.",
-            "Separe margem para taxas de serviço e bebidas."
+            ...theme.foodHighlights,
+            "Combine refeições leves com dias de muito passeio."
           ]
         },
         maps: {
