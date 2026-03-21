@@ -39,23 +39,25 @@ app.use(bodyParser.json());
 // Necessário para resolver o caminho absoluto
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const uploadsDir = path.join(__dirname, "uploads");
+const publicApiBaseUrl = process.env.PUBLIC_API_BASE_URL || "https://finance-manager-irdb.onrender.com";
 
 
 
-if (!fs.existsSync("uploads")) {
-  fs.mkdirSync("uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
 
 // Servir a pasta uploads como estática
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(uploadsDir));
 
 
 
 console.log("DATABASE_URL =", process.env.DATABASE_URL)
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
+  destination: (req, file, cb) => cb(null, uploadsDir),
   filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
 });
 const upload = multer({ storage });
@@ -77,7 +79,7 @@ app.get("/users/me", authMiddleware, async (req, res) => {
     const user = result.rows[0];
     if (user.caminho) {
       user.caminho = user.caminho.replace(/\\/g, "/");
-      user.caminho = `https://finance-manager-irdb.onrender.com/${user.caminho}`;
+      user.caminho = `${publicApiBaseUrl}/${user.caminho}`;
     }
 
     res.json(user);
@@ -108,7 +110,7 @@ WHERE u.id=$1`,
     if (user.caminho) {
       user.caminho = user.caminho.replace(/\\/g, "/");
 
-      user.caminho = `https://finance-manager-irdb.onrender.com/${user.caminho}`;
+      user.caminho = `${publicApiBaseUrl}/${user.caminho}`;
     }
 
     res.json(user);

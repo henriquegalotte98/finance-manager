@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import "./SideMenu.css";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 
 
@@ -10,6 +11,7 @@ function SideMenu() {
   const { user } = useAuth(); // pega user do contexto
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const [imageFailed, setImageFailed] = useState(false);
   const menuItems = [
     { path: "/app/profile", label: "profile" },
     { path: "/app", label: "🏠 Início" },
@@ -26,12 +28,12 @@ function SideMenu() {
           {menuItems.map((item, index) => (
             <li key={index}>
               <Link to={item.path}>
-                {item.label === "profile" && user && user.caminho ? (
+                {item.label === "profile" && user && user.caminho && !imageFailed ? (
                   <img alt="Foto de perfil"
-                    className="profile-pic" src={user?.caminho} />
+                    className="profile-pic" src={user?.caminho} onError={() => setImageFailed(true)} />
 
                 ) : (
-                  item.label
+                  item.label === "profile" ? "👤 Perfil" : item.label
                 )}
               </Link>
             </li>
