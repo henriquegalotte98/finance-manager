@@ -1,7 +1,7 @@
 import axios from "axios";
 
-export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+const api = axios.create({
+  baseURL: "https://finance-manager-irdb.onrender.com",
 });
 
 api.interceptors.request.use((config) => {
@@ -13,3 +13,5 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+
+export default api;

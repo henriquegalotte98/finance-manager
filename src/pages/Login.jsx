@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useAuth } from "../components/AuthContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import api from "../services/api";
+
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -12,14 +14,14 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
+      const res = await api.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
         email,
         password,
       });
 
       // Salva o userId e o token no localStorage
       localStorage.setItem("userId", res.data.user.id);
-      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("token", response.data.token);
 
       // Continua usando o AuthContext
       login(res.data.token, res.data.user);

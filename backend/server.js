@@ -1,4 +1,6 @@
 import dotenv from "dotenv"
+import api from "../services/api";
+
 
 dotenv.config()
 

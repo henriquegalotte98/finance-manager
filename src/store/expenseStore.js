@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import axios from "axios"
+import api from "../services/api"
 
 export const useExpenseStore = create((set, get) => ({
 
@@ -35,7 +36,7 @@ export const useExpenseStore = create((set, get) => ({
     set({ loading: true })
 
     try {
-      const res = await axios.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
+      const res = await api.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
       set({ expenses: Array.isArray(res.data) ? res.data : [] })
     } catch (err) {
       console.error(err)
@@ -60,9 +61,9 @@ export const useExpenseStore = create((set, get) => ({
     try {
 
       if (state.editId) {
-        await axios.put(`${API_URL}/expenses/${state.editId}`, payload)
+        await api.put(`${API_URL}/expenses/${state.editId}`, payload)
       } else {
-        await axios.post(`${API_URL}/expenses`, payload)
+        await api.post(`${API_URL}/expenses`, payload)
       }
 
       await get().loadMonth(API_URL)
@@ -75,7 +76,7 @@ export const useExpenseStore = create((set, get) => ({
 
   removeExpense: async (API_URL, id) => {
     try {
-      await axios.delete(`${API_URL}/expenses/${id}`)
+      await api.delete(`${API_URL}/expenses/${id}`)
       await get().loadMonth(API_URL)
     } catch (err) {
       console.error(err)

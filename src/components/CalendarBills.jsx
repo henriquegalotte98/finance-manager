@@ -1,6 +1,7 @@
 import Calendar from "react-calendar"
 import { useEffect,useState } from "react"
 import axios from "axios"
+import api from "../services/api"
 
 export default function CalendarBills({API_URL}){
 
@@ -8,7 +9,7 @@ const [bills,setBills] = useState([])
 
 useEffect(()=>{
 
-axios.get(`${API_URL}/dashboard/calendar`)
+api.get(`${API_URL}/dashboard/calendar`)
 .then(res=> setBills(res.data))
 
 },[])
