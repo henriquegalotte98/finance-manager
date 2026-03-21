@@ -62,21 +62,25 @@ const upload = multer({ storage });
 
 app.get("/users/me", authMiddleware, async (req, res) => {
   try {
-    console.log("userId:", req.userId);
-
     const result = await pool.query(
-      "SELECT id, name, email FROM users WHERE id=$1",
+      `SELECT u.id, u.name, u.email, a.caminho
+       FROM users u
+       LEFT JOIN arquivos a ON u.profile_image_id = a.id
+       WHERE u.id=$1`,
       [req.userId]
     );
-
-    console.log("result:", result.rows);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Usuário não encontrado" });
     }
 
-    res.json(result.rows[0]);
+    const user = result.rows[0];
+    if (user.caminho) {
+      user.caminho = user.caminho.replace(/\\/g, "/");
+      user.caminho = `https://finance-manager-irdb.onrender.com/${user.caminho}`;
+    }
 
+    res.json(user);
   } catch (err) {
     console.error("ERRO REAL:", err);
     res.status(500).json({ error: err.message });
