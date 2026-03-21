@@ -89,9 +89,9 @@ app.get("/users/:id", async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT u.id, u.name, u.email, a.caminho
-       FROM users u
-       LEFT JOIN arquivos a ON u.profile_image_id = a.id
-       WHERE u.id=$1`,
+FROM users u
+LEFT JOIN arquivos a ON u.profile_image_id = a.id
+WHERE u.id=$1`,
       [id]
     );
 
@@ -103,6 +103,8 @@ app.get("/users/:id", async (req, res) => {
     const user = result.rows[0];
     if (user.caminho) {
       user.caminho = user.caminho.replace(/\\/g, "/");
+
+      user.caminho = `https://finance-manager-irdb.onrender.com/${user.caminho}`;
     }
 
     res.json(user);
