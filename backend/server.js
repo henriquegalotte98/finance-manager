@@ -1,6 +1,7 @@
 import dotenv from "dotenv"
 import api from "../src/services/api.js";
 import fs from "fs";
+import { v2 as cloudinary } from "cloudinary";
 
 
 
@@ -20,6 +21,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import jwt from "jsonwebtoken";
 import { authMiddleware } from "./middleware/auth.js"
+import featureRoutes, { ensureFeatureSchema } from "./routes/feature.routes.js";
 const app = express();
 
 
@@ -33,6 +35,7 @@ app.use(express.json());
 app.use("/expenses", expensesRoutes);
 app.use("/couple", coupleRoutes);
 app.use("/auth", authRoutes);
+app.use("/features", featureRoutes);
 
 app.use(bodyParser.json());
 
@@ -41,6 +44,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadsDir = path.join(__dirname, "uploads");
 const publicApiBaseUrl = process.env.PUBLIC_API_BASE_URL || "https://finance-manager-irdb.onrender.com";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 
 
@@ -79,7 +88,9 @@ app.get("/users/me", authMiddleware, async (req, res) => {
     const user = result.rows[0];
     if (user.caminho) {
       user.caminho = user.caminho.replace(/\\/g, "/");
-      user.caminho = `${publicApiBaseUrl}/${user.caminho}`;
+      if (!user.caminho.startsWith("http")) {
+        user.caminho = `${publicApiBaseUrl}/${user.caminho}`;
+      }
     }
 
     res.json(user);
@@ -109,8 +120,9 @@ WHERE u.id=$1`,
     const user = result.rows[0];
     if (user.caminho) {
       user.caminho = user.caminho.replace(/\\/g, "/");
-
-      user.caminho = `${publicApiBaseUrl}/${user.caminho}`;
+      if (!user.caminho.startsWith("http")) {
+        user.caminho = `${publicApiBaseUrl}/${user.caminho}`;
+      }
     }
 
     res.json(user);
@@ -143,9 +155,14 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     );
     const oldImageId = oldImageResult.rows[0]?.profile_image_id;
 
+    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+      folder: "finance-manager/profile",
+      resource_type: "image"
+    });
+
     const result = await pool.query(
       "INSERT INTO arquivos (nome, caminho) VALUES ($1, $2) RETURNING id",
-      [req.file.originalname, req.file.path.replace(/\\/g, "/")]
+      [req.file.originalname, uploadResult.secure_url]
     );
     const novoArquivoId = result.rows[0].id;
 
@@ -494,6 +511,10 @@ app.listen(PORT, () => {
 
   console.log(`Servidor rodando na porta ${PORT}`);
 
+});
+
+ensureFeatureSchema().catch((err) => {
+  console.error("Erro ao preparar schema de features:", err);
 });
 
 
