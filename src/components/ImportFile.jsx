@@ -36,7 +36,7 @@ function ImportFile() {
       console.log("Upload concluído:", response.data);
 
       // 🔄 Atualiza usuário
-      const userResponse = await api.get(`/users/${user.id}`);
+      const userResponse = await api.get("/users/me");
       const updatedUser = userResponse.data;
 
       setUser(updatedUser);

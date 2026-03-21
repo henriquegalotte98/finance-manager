@@ -28,7 +28,7 @@ function SideMenu() {
               <Link to={item.path}>
                 {item.label === "profile" && user && user.caminho ? (
                   <img alt="Foto de perfil"
-                    className="profile-pic" src={`${import.meta.env.VITE_API_URL}/${user.caminho}`} />
+                    className="profile-pic" src={user.caminho} />
 
                 ) : (
                   item.label
