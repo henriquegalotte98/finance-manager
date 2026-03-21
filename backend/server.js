@@ -168,12 +168,19 @@ function totalInstallments(numTimes, recurrence) {
 app.get("/users/me", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
+
     if (!authHeader) {
+      console.log("Sem header Authorization");
       return res.status(401).json({ error: "Token não fornecido" });
     }
 
     const token = authHeader.split(" ")[1];
+
+    console.log("Token recebido:", token);
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    console.log("Decoded:", decoded);
 
     const result = await pool.query(
       `SELECT u.id, u.name, u.email, a.caminho
@@ -188,14 +195,16 @@ app.get("/users/me", async (req, res) => {
     }
 
     const user = result.rows[0];
+
     if (user.caminho) {
       user.caminho = user.caminho.replace(/\\/g, "/");
     }
 
     res.json(user);
+
   } catch (err) {
-    console.error("Erro em /users/me:", err);
-    res.status(500).json({ error: "Erro ao buscar usuário" });
+    console.error("🔥 ERRO REAL /users/me:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 
