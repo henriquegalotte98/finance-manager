@@ -1,5 +1,7 @@
 import dotenv from "dotenv"
 import api from "../src/services/api.js";
+import fs from "fs";
+
 
 
 dotenv.config()
@@ -37,6 +39,13 @@ app.use(bodyParser.json());
 // Necessário para resolver o caminho absoluto
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+
+
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
+
 
 // Servir a pasta uploads como estática
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
