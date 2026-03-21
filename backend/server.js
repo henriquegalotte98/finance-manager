@@ -169,10 +169,14 @@ function totalInstallments(numTimes, recurrence) {
 
 app.get("/users/me", authMiddleware, async (req, res) => {
   try {
+    console.log("userId:", req.userId);
+
     const result = await pool.query(
-      `SELECT id, name, email FROM users WHERE id=$1`,
+      "SELECT id, name, email FROM users WHERE id=$1",
       [req.userId]
     );
+
+    console.log("result:", result.rows);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Usuário não encontrado" });
@@ -181,8 +185,8 @@ app.get("/users/me", authMiddleware, async (req, res) => {
     res.json(result.rows[0]);
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erro interno" });
+    console.error("ERRO REAL:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 
