@@ -33,6 +33,7 @@ export async function ensureFeatureSchema() {
       couple_id INT REFERENCES couples(id) ON DELETE CASCADE,
       type VARCHAR(30) NOT NULL,
       title VARCHAR(120) NOT NULL,
+      status VARCHAR(20) DEFAULT 'active',
       created_by INT REFERENCES users(id),
       created_at TIMESTAMP DEFAULT NOW()
     );
@@ -195,6 +196,20 @@ router.post("/lists", authMiddleware, async (req, res) => {
   }
 });
 
+router.patch("/lists/:listId", authMiddleware, async (req, res) => {
+  try {
+    const { listId } = req.params;
+    const { title, status } = req.body;
+    await pool.query(
+      "UPDATE shared_lists SET title = COALESCE($1, title), status = COALESCE($2, status) WHERE id=$3",
+      [title || null, status || null, listId]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao atualizar lista" });
+  }
+});
+
 router.get("/lists/:listId/items", authMiddleware, async (req, res) => {
   try {
     const { listId } = req.params;
@@ -230,6 +245,37 @@ router.patch("/lists/items/:itemId/status", authMiddleware, async (req, res) => 
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: "Erro ao atualizar item" });
+  }
+});
+
+router.put("/lists/items/:itemId", authMiddleware, async (req, res) => {
+  try {
+    const { itemId } = req.params;
+    const { title, notes, external_link, image_url, target_price, priority, quantity } = req.body;
+    await pool.query(
+      `UPDATE shared_list_items
+       SET title=COALESCE($1, title),
+           notes=COALESCE($2, notes),
+           external_link=COALESCE($3, external_link),
+           image_url=COALESCE($4, image_url),
+           target_price=COALESCE($5, target_price),
+           priority=COALESCE($6, priority),
+           quantity=COALESCE($7, quantity)
+       WHERE id=$8`,
+      [title || null, notes || null, external_link || null, image_url || null, target_price || null, priority || null, quantity || null, itemId]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao editar item" });
+  }
+});
+
+router.delete("/lists/items/:itemId", authMiddleware, async (req, res) => {
+  try {
+    await pool.query("DELETE FROM shared_list_items WHERE id=$1", [req.params.itemId]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao excluir item" });
   }
 });
 
@@ -273,11 +319,28 @@ router.post("/todos", authMiddleware, async (req, res) => {
 
 router.patch("/todos/:id", authMiddleware, async (req, res) => {
   try {
-    const { status } = req.body;
-    await pool.query("UPDATE couple_todos SET status=$1 WHERE id=$2 AND user_id=$3", [status, req.params.id, req.userId]);
+    const { title, details, due_date, status } = req.body;
+    await pool.query(
+      `UPDATE couple_todos
+       SET title = COALESCE($1, title),
+           details = COALESCE($2, details),
+           due_date = COALESCE($3, due_date),
+           status = COALESCE($4, status)
+       WHERE id=$5 AND user_id=$6`,
+      [title || null, details || null, due_date || null, status || null, req.params.id, req.userId]
+    );
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: "Erro ao atualizar to-do" });
+  }
+});
+
+router.delete("/todos/:id", authMiddleware, async (req, res) => {
+  try {
+    await pool.query("DELETE FROM couple_todos WHERE id=$1 AND user_id=$2", [req.params.id, req.userId]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao excluir to-do" });
   }
 });
 
@@ -314,6 +377,15 @@ router.post("/travel", authMiddleware, async (req, res) => {
   }
 });
 
+router.delete("/travel/:id", authMiddleware, async (req, res) => {
+  try {
+    await pool.query("DELETE FROM travel_plans WHERE id=$1 AND owner_user_id=$2", [req.params.id, req.userId]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao excluir viagem" });
+  }
+});
+
 router.get("/travel/:planId/items", authMiddleware, async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM travel_plan_items WHERE travel_plan_id=$1 ORDER BY created_at DESC", [req.params.planId]);
@@ -336,6 +408,63 @@ router.post("/travel/:planId/items", authMiddleware, async (req, res) => {
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: "Erro ao criar item da viagem" });
+  }
+});
+
+router.get("/travel/:planId/insights", authMiddleware, async (req, res) => {
+  try {
+    const planResult = await pool.query("SELECT * FROM travel_plans WHERE id=$1 LIMIT 1", [req.params.planId]);
+    if (!planResult.rows[0]) return res.status(404).json({ error: "Viagem não encontrada" });
+    const plan = planResult.rows[0];
+    const destination = plan.destination;
+    const destinationEncoded = encodeURIComponent(destination);
+    const origin = req.query.origin || "Sao Paulo";
+    const originEncoded = encodeURIComponent(origin);
+
+    const searchQueries = {
+      tours: `o que fazer em ${destination}`,
+      food: `comida tipica em ${destination}`,
+      restaurants: `melhores restaurantes em ${destination}`,
+      mapActivities: `atrações turísticas em ${destination}`
+    };
+
+    const googleSearch = (q) => `https://www.google.com/search?q=${encodeURIComponent(q)}`;
+    const mapsRoute = `https://www.google.com/maps/dir/${originEncoded}/${destinationEncoded}`;
+    const mapsRegion = `https://www.google.com/maps/search/${destinationEncoded}`;
+
+    res.json({
+      destination,
+      cards: {
+        transport: {
+          title: "Transporte",
+          hints: [
+            "Compare ponte aérea com escalas para reduzir custo.",
+            "Inclua bagagem no cálculo de custo total."
+          ]
+        },
+        accommodation: {
+          title: "Hospedagem",
+          hints: [
+            "Prefira regiões com fácil acesso ao transporte.",
+            "Cheque taxa de limpeza e impostos antes de fechar."
+          ]
+        },
+        activities: {
+          title: "Passeios e atividades",
+          links: [googleSearch(searchQueries.tours), googleSearch(searchQueries.mapActivities)]
+        },
+        food: {
+          title: "Alimentação",
+          links: [googleSearch(searchQueries.food), googleSearch(searchQueries.restaurants)]
+        },
+        maps: {
+          title: "Mapas",
+          links: [mapsRoute, mapsRegion]
+        }
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao montar insights da viagem" });
   }
 });
 
@@ -386,6 +515,18 @@ router.post("/savings/:walletId/tx", authMiddleware, async (req, res) => {
   } catch (err) {
     await pool.query("ROLLBACK");
     res.status(500).json({ error: "Erro ao lançar transação de economia" });
+  }
+});
+
+router.get("/savings/:walletId/tx", authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT * FROM savings_transactions WHERE wallet_id=$1 ORDER BY created_at DESC",
+      [req.params.walletId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao listar transações" });
   }
 });
 

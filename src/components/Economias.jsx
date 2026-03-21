@@ -6,6 +6,11 @@ function Economias() {
   const [name, setName] = useState("");
   const [shared, setShared] = useState(true);
   const [initialBalance, setInitialBalance] = useState(0);
+  const [activeWalletId, setActiveWalletId] = useState(null);
+  const [transactions, setTransactions] = useState([]);
+  const [txAmount, setTxAmount] = useState("");
+  const [txType, setTxType] = useState("deposit");
+  const [txNotes, setTxNotes] = useState("");
 
   const loadWallets = async () => {
     const res = await api.get("/features/savings");
@@ -15,6 +20,11 @@ function Economias() {
   useEffect(() => {
     loadWallets().catch((err) => console.error("Erro ao buscar carteiras:", err));
   }, []);
+
+  const loadTransactions = async (walletId) => {
+    const res = await api.get(`/features/savings/${walletId}/tx`);
+    setTransactions(res.data || []);
+  };
 
   const onCreate = async (e) => {
     e.preventDefault();
@@ -27,6 +37,20 @@ function Economias() {
     setName("");
     setInitialBalance(0);
     await loadWallets();
+  };
+
+  const addTransaction = async (e) => {
+    e.preventDefault();
+    if (!activeWalletId || !txAmount) return;
+    await api.post(`/features/savings/${activeWalletId}/tx`, {
+      amount: Number(txAmount),
+      tx_type: txType,
+      notes: txNotes
+    });
+    setTxAmount("");
+    setTxNotes("");
+    await loadWallets();
+    await loadTransactions(activeWalletId);
   };
 
   return (
@@ -51,9 +75,50 @@ function Economias() {
         {wallets.map((wallet) => (
           <li key={wallet.id}>
             {wallet.name} - R$ {Number(wallet.balance).toFixed(2)} {wallet.is_shared ? "(Casal)" : "(Individual)"}
+            <button type="button" onClick={() => { setActiveWalletId(wallet.id); loadTransactions(wallet.id); }} style={{ marginLeft: 8 }}>
+              Ver tabela
+            </button>
           </li>
         ))}
       </ul>
+
+      {activeWalletId && (
+        <section>
+          <h3>Tabela da economia</h3>
+          <form onSubmit={addTransaction}>
+            <select value={txType} onChange={(e) => setTxType(e.target.value)}>
+              <option value="deposit">Guardar</option>
+              <option value="withdraw">Retirar</option>
+            </select>
+            <input type="number" step="0.01" value={txAmount} onChange={(e) => setTxAmount(e.target.value)} placeholder="Valor" />
+            <input value={txNotes} onChange={(e) => setTxNotes(e.target.value)} placeholder="Observação" />
+            <button type="submit">Lançar</button>
+          </form>
+          <table border="1" cellPadding="6" style={{ marginTop: 8 }}>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Valor separado</th>
+                <th>Tipo</th>
+                <th>Obs</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map((tx) => (
+                <tr key={tx.id}>
+                  <td>{new Date(tx.created_at).toLocaleDateString("pt-BR")}</td>
+                  <td>R$ {Number(tx.amount).toFixed(2)}</td>
+                  <td>{tx.tx_type === "deposit" ? "Guardado" : "Retirado"}</td>
+                  <td>{tx.notes || "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p>
+            Valor total atual: R$ {Number(wallets.find((w) => w.id === activeWalletId)?.balance || 0).toFixed(2)}
+          </p>
+        </section>
+      )}
     </div>
   );
 }
