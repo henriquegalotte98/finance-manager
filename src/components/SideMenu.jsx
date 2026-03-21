@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import "./SideMenu.css";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+
 
 const { logout } = useAuth();
 const navigate = useNavigate();
