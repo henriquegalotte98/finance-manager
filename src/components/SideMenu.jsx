@@ -4,12 +4,12 @@ import "./SideMenu.css";
 import { useNavigate } from "react-router-dom";
 
 
-const { logout } = useAuth();
-const navigate = useNavigate();
+
 
 function SideMenu() {
   const { user } = useAuth(); // pega user do contexto
-
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const menuItems = [
     { path: "/app/profile", label: "profile" },
     { path: "/app", label: "🏠 Início" },
@@ -29,7 +29,7 @@ function SideMenu() {
                 {item.label === "profile" && user && user.caminho ? (
                   <img alt="Foto de perfil"
                     className="profile-pic" src={`${import.meta.env.VITE_API_URL}/${user.caminho}`} />
-                  
+
                 ) : (
                   item.label
                 )}
