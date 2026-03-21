@@ -20,7 +20,7 @@ const app = express();
 
 
 app.use(cors({
-  origin: ["https://finance-manager-chi-ashen.vercel.app"], 
+  origin: ["https://finance-manager-chi-ashen.vercel.app"],
   methods: ["GET", "POST", "PUT", "DELETE"],
 }));
 
@@ -170,23 +170,18 @@ app.get("/users/me", async (req, res) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
-      console.log("Sem header Authorization");
       return res.status(401).json({ error: "Token não fornecido" });
     }
 
     const token = authHeader.split(" ")[1];
 
-    console.log("Token recebido:", token);
-
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    console.log("Decoded:", decoded);
 
     const result = await pool.query(
       `SELECT u.id, u.name, u.email, a.caminho
        FROM users u
        LEFT JOIN arquivos a ON u.profile_image_id = a.id
-       WHERE u.id=$1`,
+       WHERE u.id = $1`,
       [decoded.userId]
     );
 
@@ -202,9 +197,9 @@ app.get("/users/me", async (req, res) => {
 
     res.json(user);
 
-  } catch (err) {
-    console.error("🔥 ERRO REAL /users/me:", err);
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error("Erro no /users/me:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
   }
 });
 
