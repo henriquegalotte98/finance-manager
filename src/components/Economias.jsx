@@ -11,6 +11,9 @@ function Economias() {
   const [txAmount, setTxAmount] = useState("");
   const [txType, setTxType] = useState("deposit");
   const [txNotes, setTxNotes] = useState("");
+  const [editingWalletId, setEditingWalletId] = useState(null);
+  const [editWalletName, setEditWalletName] = useState("");
+  const [editWalletShared, setEditWalletShared] = useState(false);
 
   const loadWallets = async () => {
     const res = await api.get("/features/savings");
@@ -53,6 +56,31 @@ function Economias() {
     await loadTransactions(activeWalletId);
   };
 
+  const startEditWallet = (wallet) => {
+    setEditingWalletId(wallet.id);
+    setEditWalletName(wallet.name);
+    setEditWalletShared(!!wallet.is_shared);
+  };
+
+  const saveWallet = async () => {
+    if (!editingWalletId) return;
+    await api.patch(`/features/savings/${editingWalletId}`, {
+      name: editWalletName,
+      is_shared: editWalletShared
+    });
+    setEditingWalletId(null);
+    await loadWallets();
+  };
+
+  const deleteWallet = async (walletId) => {
+    await api.delete(`/features/savings/${walletId}`);
+    if (activeWalletId === walletId) {
+      setActiveWalletId(null);
+      setTransactions([]);
+    }
+    await loadWallets();
+  };
+
   return (
     <div>
       <h2>Economias (individual e compartilhada)</h2>
@@ -78,9 +106,27 @@ function Economias() {
             <button type="button" onClick={() => { setActiveWalletId(wallet.id); loadTransactions(wallet.id); }} style={{ marginLeft: 8 }}>
               Ver tabela
             </button>
+            <button type="button" onClick={() => startEditWallet(wallet)} style={{ marginLeft: 8 }}>
+              Editar
+            </button>
+            <button type="button" onClick={() => deleteWallet(wallet.id)} style={{ marginLeft: 8 }}>
+              Excluir
+            </button>
           </li>
         ))}
       </ul>
+
+      {editingWalletId && (
+        <section>
+          <h3>Editar carteira</h3>
+          <input value={editWalletName} onChange={(e) => setEditWalletName(e.target.value)} />
+          <label style={{ marginLeft: 8 }}>
+            <input type="checkbox" checked={editWalletShared} onChange={(e) => setEditWalletShared(e.target.checked)} />
+            Compartilhada
+          </label>
+          <button type="button" onClick={saveWallet}>Salvar</button>
+        </section>
+      )}
 
       {activeWalletId && (
         <section>

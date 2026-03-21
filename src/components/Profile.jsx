@@ -18,6 +18,7 @@ function Profile() {
   const [todoDraft, setTodoDraft] = useState({ title: "", details: "", due_date: "" });
   const [editingTodoId, setEditingTodoId] = useState(null);
   const [todoTab, setTodoTab] = useState("mine");
+  const [feedback, setFeedback] = useState("");
 
   const loadAll = async () => {
     const [coupleRes, listsRes, myTodosRes, spouseTodosRes] = await Promise.all([
@@ -45,9 +46,14 @@ function Profile() {
   const createList = async (e) => {
     e.preventDefault();
     if (!newListTitle) return;
-    await api.post("/features/lists", { title: newListTitle, type: newListType });
-    setNewListTitle("");
-    await loadAll();
+    try {
+      await api.post("/features/lists", { title: newListTitle, type: newListType });
+      setNewListTitle("");
+      setFeedback("Lista criada com sucesso.");
+      await loadAll();
+    } catch (err) {
+      setFeedback(err?.response?.data?.error || "Não foi possível criar a lista.");
+    }
   };
 
   const loadItems = async (listId) => {
@@ -118,6 +124,7 @@ function Profile() {
     }
     setTodoDraft({ title: "", details: "", due_date: "" });
     setEditingTodoId(null);
+    setFeedback("Tarefa salva.");
     await loadAll();
   };
 
@@ -143,6 +150,7 @@ function Profile() {
   return (
     <div>
       <h2>Perfil e Recursos do Casal</h2>
+      {feedback && <p>{feedback}</p>}
       <ImportFile />
       <LogoutButton />
 

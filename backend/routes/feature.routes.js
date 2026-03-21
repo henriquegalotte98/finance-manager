@@ -31,6 +31,7 @@ export async function ensureFeatureSchema() {
     CREATE TABLE IF NOT EXISTS shared_lists (
       id SERIAL PRIMARY KEY,
       couple_id INT REFERENCES couples(id) ON DELETE CASCADE,
+      owner_user_id INT REFERENCES users(id) ON DELETE CASCADE,
       type VARCHAR(30) NOT NULL,
       title VARCHAR(120) NOT NULL,
       status VARCHAR(20) DEFAULT 'active',
@@ -107,6 +108,9 @@ export async function ensureFeatureSchema() {
     );
   `);
 
+  await pool.query(`ALTER TABLE shared_lists ADD COLUMN IF NOT EXISTS owner_user_id INT REFERENCES users(id) ON DELETE CASCADE;`);
+  await pool.query(`ALTER TABLE shared_lists ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'active';`);
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS savings_transactions (
       id SERIAL PRIMARY KEY,
@@ -173,8 +177,13 @@ router.post("/couple/living-together", authMiddleware, async (req, res) => {
 router.get("/lists", authMiddleware, async (req, res) => {
   try {
     const coupleId = await getCoupleId(req.userId);
-    if (!coupleId) return res.json([]);
-    const result = await pool.query("SELECT * FROM shared_lists WHERE couple_id=$1 ORDER BY created_at DESC", [coupleId]);
+    const result = await pool.query(
+      `SELECT * FROM shared_lists
+       WHERE (couple_id IS NOT NULL AND couple_id=$1)
+          OR owner_user_id=$2
+       ORDER BY created_at DESC`,
+      [coupleId, req.userId]
+    );
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: "Erro ao buscar listas" });
@@ -184,11 +193,10 @@ router.get("/lists", authMiddleware, async (req, res) => {
 router.post("/lists", authMiddleware, async (req, res) => {
   try {
     const coupleId = await getCoupleId(req.userId);
-    if (!coupleId) return res.status(400).json({ error: "Crie/entre em um casal primeiro" });
     const { type, title } = req.body;
     const result = await pool.query(
-      "INSERT INTO shared_lists (couple_id, type, title, created_by) VALUES ($1,$2,$3,$4) RETURNING *",
-      [coupleId, type, title, req.userId]
+      "INSERT INTO shared_lists (couple_id, owner_user_id, type, title, created_by) VALUES ($1,$2,$3,$4,$5) RETURNING *",
+      [coupleId || null, req.userId, type, title, req.userId]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -419,6 +427,9 @@ router.get("/travel/:planId/insights", authMiddleware, async (req, res) => {
     const destination = plan.destination;
     const destinationEncoded = encodeURIComponent(destination);
     const origin = req.query.origin || "Sao Paulo";
+    const mode = req.query.mode || "air";
+    const tripMonth = req.query.tripMonth || null;
+    const flexibleMonths = Number(req.query.flexibleMonths || 0);
     const originEncoded = encodeURIComponent(origin);
 
     const searchQueries = {
@@ -432,8 +443,28 @@ router.get("/travel/:planId/insights", authMiddleware, async (req, res) => {
     const mapsRoute = `https://www.google.com/maps/dir/${originEncoded}/${destinationEncoded}`;
     const mapsRegion = `https://www.google.com/maps/search/${destinationEncoded}`;
 
+    const baseTransport = {
+      air: 1200,
+      bus: 420,
+      car: 650
+    };
+    const seasonalFactor = tripMonth ? 1 : 0.92;
+    const estimate = Math.round((baseTransport[mode] || 1000) * seasonalFactor * (1 + (Math.random() * 0.18)));
+
     res.json({
       destination,
+      transportPreview: {
+        mode,
+        tripMonth,
+        flexibleMonths,
+        estimatedPricePerPerson: estimate,
+        estimatedPriceCouple: estimate * 2
+      },
+      media: {
+        destinationPhoto: `https://source.unsplash.com/1200x700/?${destinationEncoded},travel`,
+        foodPhoto: `https://source.unsplash.com/1200x700/?${destinationEncoded},food`,
+        activitiesPhoto: `https://source.unsplash.com/1200x700/?${destinationEncoded},tourism`
+      },
       cards: {
         transport: {
           title: "Transporte",
@@ -451,11 +482,21 @@ router.get("/travel/:planId/insights", authMiddleware, async (req, res) => {
         },
         activities: {
           title: "Passeios e atividades",
-          links: [googleSearch(searchQueries.tours), googleSearch(searchQueries.mapActivities)]
+          links: [googleSearch(searchQueries.tours), googleSearch(searchQueries.mapActivities)],
+          suggestions: [
+            "Faça um passeio guiado no centro histórico.",
+            "Reserve um período para atrações ao ar livre.",
+            "Inclua uma atividade noturna com avaliação alta."
+          ]
         },
         food: {
           title: "Alimentação",
-          links: [googleSearch(searchQueries.food), googleSearch(searchQueries.restaurants)]
+          links: [googleSearch(searchQueries.food), googleSearch(searchQueries.restaurants)],
+          suggestions: [
+            "Monte uma lista de 3 restaurantes por faixa de preço.",
+            "Prove pratos típicos em locais bem avaliados.",
+            "Separe margem para taxas de serviço e bebidas."
+          ]
         },
         maps: {
           title: "Mapas",
@@ -487,13 +528,20 @@ router.post("/savings", authMiddleware, async (req, res) => {
   try {
     const { name, is_shared, initial_balance } = req.body;
     const coupleId = await getCoupleId(req.userId);
+    const initial = Number(initial_balance || 0);
     const result = await pool.query(
       `INSERT INTO savings_wallets
       (owner_user_id, couple_id, name, balance, is_shared)
       VALUES ($1,$2,$3,$4,$5)
       RETURNING *`,
-      [req.userId, is_shared ? coupleId : null, name, initial_balance || 0, !!is_shared]
+      [req.userId, is_shared ? coupleId : null, name, initial, !!is_shared]
     );
+    if (initial > 0) {
+      await pool.query(
+        "INSERT INTO savings_transactions (wallet_id, user_id, amount, tx_type, notes) VALUES ($1,$2,$3,$4,$5)",
+        [result.rows[0].id, req.userId, initial, "deposit", "Saldo inicial"]
+      );
+    }
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ error: "Erro ao criar carteira" });
@@ -527,6 +575,33 @@ router.get("/savings/:walletId/tx", authMiddleware, async (req, res) => {
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: "Erro ao listar transações" });
+  }
+});
+
+router.patch("/savings/:walletId", authMiddleware, async (req, res) => {
+  try {
+    const { name, is_shared } = req.body;
+    const coupleId = await getCoupleId(req.userId);
+    await pool.query(
+      `UPDATE savings_wallets
+       SET name = COALESCE($1, name),
+           is_shared = COALESCE($2, is_shared),
+           couple_id = CASE WHEN COALESCE($2, is_shared) = TRUE THEN $3 ELSE NULL END
+       WHERE id=$4 AND owner_user_id=$5`,
+      [name || null, typeof is_shared === "boolean" ? is_shared : null, coupleId, req.params.walletId, req.userId]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao editar carteira" });
+  }
+});
+
+router.delete("/savings/:walletId", authMiddleware, async (req, res) => {
+  try {
+    await pool.query("DELETE FROM savings_wallets WHERE id=$1 AND owner_user_id=$2", [req.params.walletId, req.userId]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao excluir carteira" });
   }
 });
 

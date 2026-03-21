@@ -27,7 +27,7 @@ const app = express();
 
 app.use(cors({
   origin: ["https://finance-manager-chi-ashen.vercel.app"],
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 }));
 
 
