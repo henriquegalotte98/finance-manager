@@ -72,9 +72,9 @@ app.get("/users/:id", async (req, res) => {
 
     res.json(user);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erro ao buscar usuário" });
-  }
+  console.error("ERRO REAL:", err);
+  res.status(500).json({ error: err.message });
+}
 });
 
 app.post("/upload", upload.single("file"), async (req, res) => {
@@ -165,41 +165,22 @@ function totalInstallments(numTimes, recurrence) {
 
 
 
-app.get("/users/me", async (req, res) => {
+app.get("/users/me", authMiddleware, async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader) {
-      return res.status(401).json({ error: "Token não fornecido" });
-    }
-
-    const token = authHeader.split(" ")[1];
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
     const result = await pool.query(
-      `SELECT u.id, u.name, u.email, a.caminho
-       FROM users u
-       LEFT JOIN arquivos a ON u.profile_image_id = a.id
-       WHERE u.id = $1`,
-      [decoded.userId]
+      `SELECT id, name, email FROM users WHERE id=$1`,
+      [req.userId]
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Usuário não encontrado" });
     }
 
-    const user = result.rows[0];
+    res.json(result.rows[0]);
 
-    if (user.caminho) {
-      user.caminho = user.caminho.replace(/\\/g, "/");
-    }
-
-    res.json(user);
-
-  } catch (error) {
-    console.error("Erro no /users/me:", error);
-    res.status(500).json({ error: "Erro interno do servidor" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erro interno" });
   }
 });
 
