@@ -1,6 +1,6 @@
 import { Bar } from "react-chartjs-2";
 import { useEffect, useState } from "react";
-import { api } from "../services/api";
+import  api  from "../services/api";
 
 import {
   Chart as ChartJS,
