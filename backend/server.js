@@ -1,5 +1,5 @@
 import dotenv from "dotenv"
-import api from "../services/api";
+import api from "../src/services/api.js";
 
 
 dotenv.config()
