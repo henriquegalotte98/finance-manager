@@ -15,7 +15,7 @@ import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 import jwt from "jsonwebtoken";
-
+import {authMiddleware} from "./middleware/auth.js"
 const app = express();
 
 
