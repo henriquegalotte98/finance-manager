@@ -20,14 +20,20 @@ export function AuthProvider({ children }) {
     }
   }, [token]);
 
- const logout = () => {
-  localStorage.removeItem("token");
-  setToken(null);
-  setUser(null);
-};
+  const login = (token, user) => {
+    localStorage.setItem("token", token);
+    setToken(token);
+    setUser(user);
+  };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    setToken(null);
+    setUser(null);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, token, setToken, logout }}>
+    <AuthContext.Provider value={{ user, setUser, token, setToken, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
