@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import  api  from "../services/api";
+import api from "../services/api";
 
 const AuthContext = createContext();
 
@@ -7,7 +7,6 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token"));
 
-  // 🔥 CARREGAR USUÁRIO AUTOMATICAMENTE
   useEffect(() => {
     if (token) {
       api.get("/users/me")
@@ -21,8 +20,16 @@ export function AuthProvider({ children }) {
     }
   }, [token]);
 
+  // ✅ ADICIONA ISSO
+  const logout = () => {
+    localStorage.removeItem("token");
+    setToken(null);
+    setUser(null);
+    window.location.href = "/login";
+  };
+
   return (
-    <AuthContext.Provider value={{ user, setUser, token, setToken }}>
+    <AuthContext.Provider value={{ user, setUser, token, setToken, logout }}>
       {children}
     </AuthContext.Provider>
   );
