@@ -39,6 +39,14 @@ app.use("/features", featureRoutes);
 
 app.use(bodyParser.json());
 
+app.get("/", (_req, res) => {
+  res.status(200).send("ok");
+});
+
+app.get("/healthz", (_req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 // Necessário para resolver o caminho absoluto
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -507,14 +515,12 @@ app.get("/dashboard/monthly", async (req, res) => {
 });
 
 
-app.listen(PORT, () => {
-
-  console.log(`Servidor rodando na porta ${PORT}`);
-
-});
-
 ensureFeatureSchema().catch((err) => {
   console.error("Erro ao preparar schema de features:", err);
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
 
 
