@@ -13,21 +13,25 @@ function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
     try {
-      const res = await api.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
+      const response = await api.post("/auth/login", {
         email,
         password,
       });
 
-      // Salva o userId e o token no localStorage
-      localStorage.setItem("userId", res.data.user.id);
+      // salva token
       localStorage.setItem("token", response.data.token);
 
-      // Continua usando o AuthContext
-      login(res.data.token, res.data.user);
+      // salva userId
+      localStorage.setItem("userId", response.data.user.id);
 
-      // Redireciona para o app
+      // atualiza contexto
+      login(response.data.token, response.data.user);
+
+      // redireciona
       navigate("/app");
+
     } catch (err) {
       console.error("Erro no login:", err);
     }
