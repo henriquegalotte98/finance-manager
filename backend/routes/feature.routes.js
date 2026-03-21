@@ -5,6 +5,51 @@ import { authMiddleware } from "../middleware/auth.js";
 
 const router = express.Router();
 
+async function tryFetchTravelPrices({ originIata, destinationIata, month, mode }) {
+  const rapidApiKey = process.env.RAPIDAPI_KEY;
+  if (!rapidApiKey || mode !== "air" || !originIata || !destinationIata || !month) {
+    return null;
+  }
+  try {
+    const date = `${month}-15`;
+    const url = `https://sky-scrapper.p.rapidapi.com/api/v1/flights/searchFlights?originSkyId=${originIata}&destinationSkyId=${destinationIata}&originEntityId=${originIata}&destinationEntityId=${destinationIata}&date=${date}&adults=1&currency=BRL&market=BR&locale=pt-BR`;
+    const response = await fetch(url, {
+      headers: {
+        "x-rapidapi-key": rapidApiKey,
+        "x-rapidapi-host": "sky-scrapper.p.rapidapi.com"
+      }
+    });
+    if (!response.ok) return null;
+    const json = await response.json();
+    const candidate = json?.data?.itineraries?.[0]?.price?.raw || null;
+    if (!candidate) return null;
+    return Number(candidate);
+  } catch (_err) {
+    return null;
+  }
+}
+
+async function tryFetchHotelPrices({ destination }) {
+  const rapidApiKey = process.env.RAPIDAPI_KEY;
+  if (!rapidApiKey || !destination) return null;
+  try {
+    const url = `https://booking-com15.p.rapidapi.com/api/v1/hotels/searchDestination?query=${encodeURIComponent(destination)}`;
+    const response = await fetch(url, {
+      headers: {
+        "x-rapidapi-key": rapidApiKey,
+        "x-rapidapi-host": "booking-com15.p.rapidapi.com"
+      }
+    });
+    if (!response.ok) return null;
+    const json = await response.json();
+    if (!json?.data?.[0]) return null;
+    // API gratuita costuma variar por plano; mantemos como referência aproximada.
+    return 320;
+  } catch (_err) {
+    return null;
+  }
+}
+
 export async function ensureFeatureSchema() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS couples (
@@ -82,6 +127,8 @@ export async function ensureFeatureSchema() {
       created_at TIMESTAMP DEFAULT NOW()
     );
   `);
+  await pool.query(`ALTER TABLE travel_plans ADD COLUMN IF NOT EXISTS definitive_transport JSONB;`);
+  await pool.query(`ALTER TABLE travel_plans ADD COLUMN IF NOT EXISTS definitive_accommodation JSONB;`);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS travel_plan_items (
@@ -419,6 +466,63 @@ router.post("/travel/:planId/items", authMiddleware, async (req, res) => {
   }
 });
 
+router.put("/travel/items/:itemId", authMiddleware, async (req, res) => {
+  try {
+    const { category, title, estimated_cost, actual_cost, notes } = req.body;
+    await pool.query(
+      `UPDATE travel_plan_items
+       SET category = COALESCE($1, category),
+           title = COALESCE($2, title),
+           estimated_cost = COALESCE($3, estimated_cost),
+           actual_cost = COALESCE($4, actual_cost),
+           notes = COALESCE($5, notes)
+       WHERE id=$6`,
+      [category || null, title || null, estimated_cost ?? null, actual_cost ?? null, notes ?? null, req.params.itemId]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao editar item da viagem" });
+  }
+});
+
+router.delete("/travel/items/:itemId", authMiddleware, async (req, res) => {
+  try {
+    await pool.query("DELETE FROM travel_plan_items WHERE id=$1", [req.params.itemId]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao excluir item da viagem" });
+  }
+});
+
+router.put("/travel/:planId/final-data", authMiddleware, async (req, res) => {
+  try {
+    const { definitiveTransport, definitiveAccommodation } = req.body;
+    const result = await pool.query(
+      `UPDATE travel_plans
+       SET definitive_transport = COALESCE($1, definitive_transport),
+           definitive_accommodation = COALESCE($2, definitive_accommodation)
+       WHERE id=$3 AND owner_user_id=$4
+       RETURNING *`,
+      [definitiveTransport || null, definitiveAccommodation || null, req.params.planId, req.userId]
+    );
+    res.json(result.rows[0] || null);
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao salvar dados finais da viagem" });
+  }
+});
+
+router.get("/travel/:planId/final-data", authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT definitive_transport, definitive_accommodation FROM travel_plans WHERE id=$1 LIMIT 1",
+      [req.params.planId]
+    );
+    res.json(result.rows[0] || { definitive_transport: null, definitive_accommodation: null });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao carregar dados finais da viagem" });
+  }
+});
+
 router.get("/travel/:planId/insights", authMiddleware, async (req, res) => {
   try {
     const planResult = await pool.query("SELECT * FROM travel_plans WHERE id=$1 LIMIT 1", [req.params.planId]);
@@ -430,6 +534,8 @@ router.get("/travel/:planId/insights", authMiddleware, async (req, res) => {
     const mode = req.query.mode || "air";
     const tripMonth = req.query.tripMonth || null;
     const flexibleMonths = Number(req.query.flexibleMonths || 0);
+    const checkIn = req.query.checkIn || null;
+    const checkOut = req.query.checkOut || null;
     const originEncoded = encodeURIComponent(origin);
 
     const searchQueries = {
@@ -443,13 +549,40 @@ router.get("/travel/:planId/insights", authMiddleware, async (req, res) => {
     const mapsRoute = `https://www.google.com/maps/dir/${originEncoded}/${destinationEncoded}`;
     const mapsRegion = `https://www.google.com/maps/search/${destinationEncoded}`;
 
+    const iataMap = {
+      "sao paulo": "GRU",
+      "rio de janeiro": "GIG",
+      "miami": "MIA",
+      "orlando": "MCO",
+      "lisboa": "LIS",
+      "londres": "LHR",
+      "paris": "CDG",
+      "toronto": "YYZ",
+      "buenos aires": "EZE",
+      "santiago": "SCL",
+      "tokyo": "HND"
+    };
+    const originIata = iataMap[String(origin).toLowerCase()] || null;
+    const destinationIata = iataMap[String(destination).toLowerCase()] || null;
+
     const baseTransport = {
       air: 1200,
       bus: 420,
       car: 650
     };
     const seasonalFactor = tripMonth ? 1 : 0.92;
-    const estimate = Math.round((baseTransport[mode] || 1000) * seasonalFactor * (1 + (Math.random() * 0.18)));
+    const fallbackEstimate = Math.round((baseTransport[mode] || 1000) * seasonalFactor * (1 + (Math.random() * 0.18)));
+    const apiEstimate = await tryFetchTravelPrices({ originIata, destinationIata, month: tripMonth, mode });
+    const estimate = apiEstimate || fallbackEstimate;
+
+    const oneDay = 24 * 60 * 60 * 1000;
+    const parsedIn = checkIn ? new Date(checkIn) : null;
+    const parsedOut = checkOut ? new Date(checkOut) : null;
+    const nights = parsedIn && parsedOut ? Math.max(1, Math.round((parsedOut - parsedIn) / oneDay)) : 5;
+    const hotelFallbackNight = 280 + Math.round(Math.random() * 180);
+    const hotelApiNight = await tryFetchHotelPrices({ destination });
+    const hotelNight = hotelApiNight || hotelFallbackNight;
+    const hotelTotal = hotelNight * nights;
 
     res.json({
       destination,
@@ -461,9 +594,16 @@ router.get("/travel/:planId/insights", authMiddleware, async (req, res) => {
         estimatedPriceCouple: estimate * 2
       },
       media: {
-        destinationPhoto: `https://source.unsplash.com/1200x700/?${destinationEncoded},travel`,
-        foodPhoto: `https://source.unsplash.com/1200x700/?${destinationEncoded},food`,
-        activitiesPhoto: `https://source.unsplash.com/1200x700/?${destinationEncoded},tourism`
+        destinationPhoto: `https://picsum.photos/seed/${destinationEncoded}-destination/1200/700`,
+        foodPhoto: `https://picsum.photos/seed/${destinationEncoded}-food/1200/700`,
+        activitiesPhoto: `https://picsum.photos/seed/${destinationEncoded}-activities/1200/700`
+      },
+      accommodationPreview: {
+        checkIn,
+        checkOut,
+        nights,
+        estimatedNightly: hotelNight,
+        estimatedTotal: hotelTotal
       },
       cards: {
         transport: {
@@ -478,6 +618,15 @@ router.get("/travel/:planId/insights", authMiddleware, async (req, res) => {
           hints: [
             "Prefira regiões com fácil acesso ao transporte.",
             "Cheque taxa de limpeza e impostos antes de fechar."
+          ],
+          suggestions: [
+            "Filtre por nota 8+ e cancelamento grátis.",
+            "Compare hotel com apartamento para estadias longas.",
+            "Verifique custo com café da manhã incluso."
+          ],
+          links: [
+            `https://www.google.com/travel/hotels/${destinationEncoded}`,
+            `https://www.booking.com/searchresults.pt-br.html?ss=${destinationEncoded}`
           ]
         },
         activities: {

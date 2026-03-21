@@ -13,6 +13,8 @@ function Travel() {
   const [transportMode, setTransportMode] = useState("air");
   const [tripMonth, setTripMonth] = useState("");
   const [flexibleMonths, setFlexibleMonths] = useState(0);
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
   const [transportLocked, setTransportLocked] = useState(false);
   const [transportReal, setTransportReal] = useState({
     itinerary: "",
@@ -46,7 +48,7 @@ function Travel() {
   const selectPlan = async (plan) => {
     setActivePlan(plan);
     const res = await api.get(`/features/travel/${plan.id}/insights`, {
-      params: { origin, mode: transportMode, tripMonth, flexibleMonths }
+      params: { origin, mode: transportMode, tripMonth, flexibleMonths, checkIn, checkOut }
     });
     setInsights(res.data);
   };
@@ -92,8 +94,10 @@ function Travel() {
           onChange={(e) => setFlexibleMonths(e.target.value)}
           placeholder="Mais barato em até X meses"
         />
+        <input type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
+        <input type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
         {activePlan && (
-          <button type="button" onClick={() => selectPlan(activePlan)}>Atualizar prévia</button>
+          <button type="button" onClick={() => selectPlan(activePlan)}>Recalcular preços</button>
         )}
       </div>
 
@@ -119,13 +123,13 @@ function Travel() {
         <section>
           <h3>Dashboard da viagem: {activePlan.title}</h3>
           <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
-            <article style={{ border: "1px solid #444", padding: 12, borderRadius: 8 }}>
+            <article style={{ border: "1px solid #444", padding: 12, borderRadius: 12, background: "linear-gradient(180deg,#171a26,#121317)" }}>
               <h4>Card 1 - Transporte</h4>
               <p>Destino: {insights.destination}</p>
               <p>Origem: {origin}</p>
               {!transportLocked ? (
                 <>
-                  <p>Prévia API: R$ {insights.transportPreview.estimatedPricePerPerson} por pessoa</p>
+                  <p>Prévia API/base: R$ {insights.transportPreview.estimatedPricePerPerson} por pessoa</p>
                   <p>Casal: R$ {insights.transportPreview.estimatedPriceCouple}</p>
                   <input
                     value={transportReal.itinerary}
@@ -162,13 +166,26 @@ function Travel() {
                 </>
               )}
             </article>
-            <article style={{ border: "1px solid #444", padding: 12, borderRadius: 8 }}>
+            <article style={{ border: "1px solid #444", padding: 12, borderRadius: 12, background: "linear-gradient(180deg,#152223,#121317)" }}>
               <h4>Card 2 - Hospedagem</h4>
-              <p>Adicione hotel/pousada e valor estimado nos itens.</p>
+              <p>Prévia por diária: R$ {Number(insights.accommodationPreview.estimatedNightly || 0).toFixed(2)}</p>
+              <p>Noites: {insights.accommodationPreview.nights}</p>
+              <p>Total aproximado: R$ {Number(insights.accommodationPreview.estimatedTotal || 0).toFixed(2)}</p>
+              <ul>
+                {insights.cards.accommodation.suggestions.map((s) => <li key={s}>{s}</li>)}
+              </ul>
+              {insights.cards.accommodation.links.map((link) => (
+                <p key={link}><a href={link} target="_blank" rel="noreferrer">Pesquisar hospedagem</a></p>
+              ))}
             </article>
-            <article style={{ border: "1px solid #444", padding: 12, borderRadius: 8 }}>
+            <article style={{ border: "1px solid #444", padding: 12, borderRadius: 12, background: "linear-gradient(180deg,#201822,#121317)" }}>
               <h4>Card 3 - Passeios</h4>
-              <img src={insights.media.activitiesPhoto} alt="Passeios" style={{ width: "100%", borderRadius: 8 }} />
+              <img
+                src={insights.media.activitiesPhoto}
+                alt="Passeios"
+                style={{ width: "100%", borderRadius: 8 }}
+                onError={(e) => { e.currentTarget.src = "https://picsum.photos/seed/activities-fallback/1200/700"; }}
+              />
               <ul>
                 {insights.cards.activities.suggestions.map((s) => <li key={s}>{s}</li>)}
               </ul>
@@ -176,9 +193,14 @@ function Travel() {
                 <p key={link}><a href={link} target="_blank" rel="noreferrer">Sugestões na internet</a></p>
               ))}
             </article>
-            <article style={{ border: "1px solid #444", padding: 12, borderRadius: 8 }}>
+            <article style={{ border: "1px solid #444", padding: 12, borderRadius: 12, background: "linear-gradient(180deg,#202015,#121317)" }}>
               <h4>Card 4 - Alimentação</h4>
-              <img src={insights.media.foodPhoto} alt="Alimentação" style={{ width: "100%", borderRadius: 8 }} />
+              <img
+                src={insights.media.foodPhoto}
+                alt="Alimentação"
+                style={{ width: "100%", borderRadius: 8 }}
+                onError={(e) => { e.currentTarget.src = "https://picsum.photos/seed/food-fallback/1200/700"; }}
+              />
               <ul>
                 {insights.cards.food.suggestions.map((s) => <li key={s}>{s}</li>)}
               </ul>
@@ -186,7 +208,7 @@ function Travel() {
                 <p key={link}><a href={link} target="_blank" rel="noreferrer">Dicas e média de valores</a></p>
               ))}
             </article>
-            <article style={{ border: "1px solid #444", padding: 12, borderRadius: 8 }}>
+            <article style={{ border: "1px solid #444", padding: 12, borderRadius: 12, background: "linear-gradient(180deg,#17201d,#121317)" }}>
               <h4>Card 5 - Localização / Mapas</h4>
               <iframe
                 title="Mapa rota"
@@ -196,9 +218,14 @@ function Travel() {
               />
               <p><a href={insights.cards.maps.links[0]} target="_blank" rel="noreferrer">Abrir rota no Google Maps</a></p>
             </article>
-            <article style={{ border: "1px solid #444", padding: 12, borderRadius: 8 }}>
+            <article style={{ border: "1px solid #444", padding: 12, borderRadius: 12, background: "linear-gradient(180deg,#191b26,#121317)" }}>
               <h4>Card 6 - Fotos do destino</h4>
-              <img src={insights.media.destinationPhoto} alt="Destino" style={{ width: "100%", borderRadius: 8 }} />
+              <img
+                src={insights.media.destinationPhoto}
+                alt="Destino"
+                style={{ width: "100%", borderRadius: 8 }}
+                onError={(e) => { e.currentTarget.src = "https://picsum.photos/seed/destination-fallback/1200/700"; }}
+              />
             </article>
           </div>
 
