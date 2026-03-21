@@ -17,7 +17,7 @@ import multer from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 import jwt from "jsonwebtoken";
-import {authMiddleware} from "./middleware/auth.js"
+import { authMiddleware } from "./middleware/auth.js"
 const app = express();
 
 
@@ -98,9 +98,9 @@ app.get("/users/:id", async (req, res) => {
 
     res.json(user);
   } catch (err) {
-  console.error("ERRO REAL:", err);
-  res.status(500).json({ error: err.message });
-}
+    console.error("ERRO REAL:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post("/upload", upload.single("file"), async (req, res) => {
@@ -184,9 +184,9 @@ function totalInstallments(numTimes, recurrence) {
   if (recurrence === "monthly") return 12;
   if (recurrence === "weekly") return 52;
   if (recurrence === "yearly") return 5;
-  
+
   return numTimes;
-  
+
 }
 
 
@@ -416,9 +416,9 @@ app.get("/dashboard/calendar", async (req, res) => {
 
   const result = await pool.query(
     `
-SELECT duedate, service, amount
+SELECT i.duedate, e.service
 FROM installments i
-JOIN expenses e ON e.id=i.expense_id
+JOIN expenses e ON e.id = i.expense_id
 `
   )
 
