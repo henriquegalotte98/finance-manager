@@ -26,11 +26,13 @@ const app = express();
 
 
 app.use(cors({
-  origin: ["https://finance-manager-chi-ashen.vercel.app"],
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  origin: [
+    "http://localhost:5173",
+    "https://finance-manager-chi-ashen.vercel.app"
+  ],
+  credentials: true
 }));
-
-
+app.options("*", cors());
 app.use(express.json());
 app.use("/expenses", expensesRoutes);
 app.use("/couple", coupleRoutes);
