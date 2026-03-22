@@ -1,11 +1,11 @@
 import dotenv from "dotenv"
-import api from "../src/services/api.js";
+dotenv.config()
 import fs from "fs";
 import { v2 as cloudinary } from "cloudinary";
 
 
 
-dotenv.config()
+import "./db.js";
 
 import coupleRoutes from "./routes/couple.routes.js"
 import { getUserCoupleId } from "./utils/getUserCouple.js"
@@ -32,7 +32,7 @@ app.use(cors({
   ],
   credentials: true
 }));
-app.options("*", cors());
+
 app.use(express.json());
 app.use("/expenses", expensesRoutes);
 app.use("/couple", coupleRoutes);

@@ -1,14 +1,14 @@
-import pkg from "pg"
+import dotenv from "dotenv";
+dotenv.config();
 
-const { Pool } = pkg
+import pkg from "pg";
+
+console.log("DB URL:", process.env.DATABASE_URL);
+const { Pool } = pkg;
+console.log("DB URL:", process.env.DATABASE_URL);
+
 
 export const pool = new Pool({
-  host: "dpg-d6d3g2stgctc73etgsh0-a.oregon-postgres.render.com",
-  port: 5432,
-  user: "finance_aplication_user",
-  password: "g6k4n9tKjRKCnQ0ZEaKh5mVA5OG3Hclm",
-  database: "finance_aplication",
-  ssl: {
-    rejectUnauthorized: false
-  }
-})
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
