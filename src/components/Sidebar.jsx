@@ -1,7 +1,11 @@
 import { NavLink } from "react-router-dom";
 import "./Sidebar.css";
+import { useAuth } from "./AuthContext";
 
 export default function Sidebar() {
+  const { user } = useAuth(); // pega user do contexto
+
+
   return (
     <aside className="sidebar">
       <h2 className="sidebar-logo">Finance</h2>
@@ -11,9 +15,6 @@ export default function Sidebar() {
           Dashboard
         </NavLink>
 
-        <NavLink to="/app/importfile" className="sidebar-link">
-          Importar
-        </NavLink>
 
         <NavLink to="/app/excel" className="sidebar-link">
           Excel
@@ -32,7 +33,14 @@ export default function Sidebar() {
         </NavLink>
 
         <NavLink to="/app/profile" className="sidebar-link">
-          Perfil
+          <div className="profile_section">
+            <img alt="Foto de perfil"
+              className="profile_avatar" src={user?.caminho} onError={() => setImageFailed(true)} />
+            <span className="profile_name">
+              {user?.name}
+            </span>
+          </div>
+          
         </NavLink>
       </nav>
     </aside>

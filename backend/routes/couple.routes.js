@@ -5,9 +5,11 @@ import { generateInviteCode } from "../utils/generateInviteCode.js"
 const router = express.Router()
 
 // criar casal
-router.post("/create", async (req, res) => {
+router.post("/create",  async (req, res) => {
 
-  const { userId } = req.body
+  const userId = req.userId; // vem do token
+
+
 
   try {
 
