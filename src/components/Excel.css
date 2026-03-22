@@ -1,0 +1,165 @@
+.excel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* FILTRO */
+.month_filter {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  background: rgba(15, 23, 42, 0.55);
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.month_filter > div {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* PAINEL */
+.expenses_panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+
+  padding: 18px;
+}
+
+.expenses_panel .eco-btn {
+  grid-column: span 2;
+}
+
+.eco-input {
+  width: 100%;
+  padding: 12px 14px;
+
+  border-radius: 10px;
+  border: 1px solid var(--border);
+
+  background: rgba(255,255,255,0.03);
+  color: var(--text);
+
+  transition: 0.2s;
+}
+
+.eco-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: rgba(255,255,255,0.05);
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+}
+/* BOTÕES */
+.eco-btn {
+  width: 100%;
+}
+
+/* TABELA WRAPPER (IMPORTANTE) */
+.expenses_wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* TABELA */
+.expenses_table {
+  width: 100%;
+  min-width: 700px;
+
+  border-collapse: collapse;
+
+  background: rgba(15, 23, 42, 0.55);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* CABEÇALHO */
+.expenses_table thead {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.expenses_table th {
+  text-align: left;
+  padding: 12px;
+  font-size: 14px;
+}
+
+/* LINHAS */
+.expenses_table td {
+  padding: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* SERVICE */
+.label_service {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* TAG */
+.eco-tag-installments {
+  font-size: 0.65rem;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.2);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.eco-tag-shared-installments {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #a7f3d0;
+}
+
+/* AÇÕES */
+.expenses_table button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+
+  .expenses_panel {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .expenses_table {
+    font-size: 12px;
+  }
+
+  .expenses_table th,
+  .expenses_table td {
+    padding: 8px;
+  }
+}
+
+/* MOBILE PEQUENO */
+@media (max-width: 480px) {
+
+  .expenses_panel {
+    grid-template-columns: 1fr;
+  }
+
+}
+.expenses_table thead th {
+  position: sticky;
+  top: 0;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(6px);
+  z-index: 1;
+}
+.expenses_table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.expenses_table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}

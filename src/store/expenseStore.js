@@ -85,7 +85,7 @@ export const useExpenseStore = create((set, get) => ({
 
   startEdit: (exp) => set({
     service: exp.service,
-    price: exp.amount.toString(),
+    price: exp.amount?.toString() || "0",
     dueDate: new Date(exp.duedate).toISOString().split("T")[0],
     paymentMethod: exp.paymentmethod,
     numberTimes: exp.numbertimes,

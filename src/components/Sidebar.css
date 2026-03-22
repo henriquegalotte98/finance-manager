@@ -1,0 +1,55 @@
+
+
+.sidebar-logo {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 30px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-link {
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #94a3b8;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.sidebar-link:hover {
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+}
+
+/* 🔥 ativo */
+.sidebar-link.active {
+  background: #1e293b;
+  color: #fff;
+  font-weight: 600;
+}
+
+
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: #0f172a;
+}
+
+/* Sidebar normal no fluxo */
+.sidebar {
+  width: 240px;
+  background: #020617;
+  border-right: 1px solid rgba(255,255,255,0.05);
+  padding: 20px;
+}
+
+/* Conteúdo ocupa o resto */
+.layout-content {
+  flex: 1;
+  padding: 24px;
+}

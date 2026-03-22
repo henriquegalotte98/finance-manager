@@ -29,8 +29,13 @@ function SideMenu() {
             <li key={index}>
               <Link to={item.path}>
                 {item.label === "profile" && user && user.caminho && !imageFailed ? (
-                  <img alt="Foto de perfil"
-                    className="profile-pic" src={user?.caminho} onError={() => setImageFailed(true)} />
+                  <div className="profile_section"> 
+                    <img alt="Foto de perfil"
+                      className="profile_avatar" src={user?.caminho} onError={() => setImageFailed(true)} />
+                    <span className="profile_name">
+    {user?.name}
+  </span>
+                  </div>
 
                 ) : (
                   item.label === "profile" ? "👤 Perfil" : item.label

@@ -382,6 +382,7 @@ app.get("/expenses/month/:year/:month", async (req, res) => {
         i.amount,
         i.duedate,
         e.service,
+        e.price,
         e.paymentmethod,
         e.numbertimes,
         e.recurrence,

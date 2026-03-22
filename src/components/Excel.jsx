@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 import { useExpenseStore } from "../store/expenseStore"
+import "./Excel.css";
 
 function Excel({ activeApp }) {
 
@@ -26,9 +27,15 @@ function Excel({ activeApp }) {
   } = useExpenseStore()
 
   useEffect(() => {
+    if (!API_URL) return
     loadMonth(API_URL)
-  }, [selectedMonth, selectedYear])
+  }, [selectedMonth, selectedYear, API_URL])
 
+  const formatCurrency = (value) =>
+    Number(value).toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    })
   return (
     <div id="excel" className="excel">
 
@@ -39,6 +46,7 @@ function Excel({ activeApp }) {
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
 
           <select
+            className="eco-input"
             value={selectedMonth}
             onChange={(e) => setField("selectedMonth", parseInt(e.target.value))}
           >
@@ -54,6 +62,8 @@ function Excel({ activeApp }) {
           </select>
 
           <select
+            className="eco-input"
+
             value={selectedYear}
             onChange={(e) => setField("selectedYear", parseInt(e.target.value))}
           >
@@ -73,6 +83,8 @@ function Excel({ activeApp }) {
       <div className="expenses_panel">
 
         <input
+          className="eco-input"
+
           type="text"
           placeholder="Conta ou serviço"
           value={service}
@@ -80,6 +92,8 @@ function Excel({ activeApp }) {
         />
 
         <input
+          className="eco-input"
+
           type="number"
           placeholder="Preço"
           value={price}
@@ -87,12 +101,16 @@ function Excel({ activeApp }) {
         />
 
         <input
+          className="eco-input"
+
           type="date"
           value={dueDate}
           onChange={(e) => setField("dueDate", e.target.value)}
         />
 
         <select
+          className="eco-input"
+
           value={paymentMethod}
           onChange={(e) => setField("paymentMethod", e.target.value)}
         >
@@ -105,6 +123,8 @@ function Excel({ activeApp }) {
 
         {(paymentMethod === "credit_card" || paymentMethod === "credit_store") && (
           <select
+            className="eco-input"
+
             value={numberTimes}
             onChange={(e) => setField("numberTimes", parseInt(e.target.value))}
           >
@@ -117,6 +137,8 @@ function Excel({ activeApp }) {
         )}
 
         <select
+          className="eco-input"
+
           value={recurrence}
           onChange={(e) => setField("recurrence", e.target.value)}
         >
@@ -126,62 +148,64 @@ function Excel({ activeApp }) {
           <option value="yearly">Anual</option>
         </select>
 
-        <button onClick={() => addExpense(API_URL)}>
-          {editId ? "Salvar edição" : "Adicionar"}
+        <button
+          className="eco-btn eco-btn-primary"
+          disabled={loading}
+        >
+          {loading ? "Salvando..." : editId ? "Salvar edição" : "Adicionar"}
         </button>
 
-        <button onClick={resetForm}>
+        <button className="eco-btn eco-btn-danger" onClick={resetForm}>
           Cancelar
         </button>
 
       </div>
 
       <h3>📊 Lista de gastos</h3>
-
-      <table className="expenses_table">
-        <thead>
-          <tr>
-            <th className="th_first">Serviço</th>
-            <th>Valor da Parcela</th>
-            <th>Forma de Pagamento</th>
-            <th>Parcela</th>
-            <th>Vencimento</th>
-            <th className="th_last">Ações</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {loading ? (
-            <tr>
-              <td colSpan="6" style={{ textAlign: "center", padding: "20px" }}>
-                ⏳ Carregando despesas...
-              </td>
+      <div className="expenses_wrapper">
+        <table className="expenses_table">
+          <thead>
+            <tr className="expenses_body">
+              <th className="th_first">Serviço</th>
+              <th>Valor da Parcela</th>
+              <th>Forma de Pagamento</th>
+              <th>Vencimento</th>
+              <th className="th_last">Ações</th>
             </tr>
-          ) : expenses.length === 0 ? (
-            <tr>
-              <td colSpan="6" style={{ textAlign: "center" }}>
-                Nenhum gasto neste mês
-              </td>
-            </tr>
-          ) : (
-            expenses.map((exp) => (
-              <tr key={exp.id}>
-                <td>{exp.service}</td>
-                <td>R$ {exp.amount}</td>
-                <td>{exp.paymentmethod}</td>
-                <td>{exp.installment_number} de {exp.numbertimes}</td>
-                <td>{new Date(exp.duedate).toLocaleDateString("pt-BR")}</td>
-                <td>
-                  <button onClick={() => startEdit(exp)}>✏️</button>
-                  <button onClick={() => removeExpense(API_URL, exp.expense_id)}>❌</button>
+          </thead>
+
+          <tbody>
+            {loading ? (
+              <tr >
+                <td colSpan="6" style={{ textAlign: "center", padding: "20px" }}>
+                  ⏳ Carregando despesas...
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
+            ) : expenses.length === 0 ? (
+              <tr>
+                <td colSpan="6" style={{ textAlign: "center" }}>
+                  Nenhum gasto neste mês
+                </td>
+              </tr>
+            ) : (
+              expenses.map((exp) => (
+                <tr className="expenses_body line_bottom" key={exp.id}>
+                  <td className="label_service">{exp.service} <div className="eco-tag-installments eco-tag-shared-installments">{exp.installment_number} de {exp.numbertimes}</div> </td>
+                  <td>{formatCurrency(exp.amount)}</td>
+                  <td>{exp.paymentmethod}</td>
 
-      </table>
+                  <td>{new Date(exp.duedate).toLocaleDateString("pt-BR")}</td>
+                  <td>
+                    <button onClick={() => startEdit(exp)}>✏️</button>
+                    <button onClick={() => removeExpense(API_URL, exp.expense_id)}>❌</button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
 
+        </table>
+      </div>
     </div>
   )
 }

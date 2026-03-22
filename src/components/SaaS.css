@@ -1,0 +1,85 @@
+/* ================= CSS ================= */
+
+.saas-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.saas-hero {
+  display: flex;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+}
+
+.saas-kicker {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.saas-sub {
+  opacity: 0.7;
+}
+
+.saas-stat {
+  text-align: right;
+}
+
+.saas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.saas-card {
+  padding: 1rem;
+  border-radius: 16px;
+  background: #0f172a;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.saas-list {
+  background: #0f172a;
+  padding: 1rem;
+  border-radius: 16px;
+}
+
+.saas-list-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.saas-loading {
+  padding: 2rem;
+}
+
+.saas-skeleton {
+  background: linear-gradient(90deg, #111 25%, #222 50%, #111 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.saas-skeleton.hero { height: 120px; }
+.saas-skeleton.card { height: 80px; }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.saas-error {
+  color: red;
+  text-align: center;
+  padding: 2rem;
+}
