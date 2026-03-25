@@ -508,10 +508,12 @@ ensureFeatureSchema().catch((err) => {
   console.error("Erro ao preparar schema de features:", err);
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
-
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+  });
+}
 
 app.put("/users/:id/profile-image", async (req, res) => {
   const { id } = req.params;

@@ -1,8 +1,13 @@
-// backend/services/api.js (se realmente precisar)
 import axios from "axios";
 
+// Usar a URL do backend que vamos deployar no Vercel
+const API_URL = import.meta.env.VITE_API_URL || "https://seu-backend.vercel.app";
+
 const api = axios.create({
-  baseURL: "http://localhost:3000" // ou outra API externa
+  baseURL: API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 export default api;
