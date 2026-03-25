@@ -508,12 +508,6 @@ ensureFeatureSchema().catch((err) => {
   console.error("Erro ao preparar schema de features:", err);
 });
 
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-  });
-}
 
 app.put("/users/:id/profile-image", async (req, res) => {
   const { id } = req.params;
@@ -530,3 +524,15 @@ app.put("/users/:id/profile-image", async (req, res) => {
     res.status(500).send("Erro ao atualizar foto de perfil");
   }
 });
+
+
+// Exportar para Vercel
+export default app;
+
+// Para desenvolvimento local
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+  });
+}
