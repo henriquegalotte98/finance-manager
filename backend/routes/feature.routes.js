@@ -730,19 +730,35 @@ router.get("/savings/:walletId/tx", authMiddleware, async (req, res) => {
 
 router.patch("/savings/:walletId", authMiddleware, async (req, res) => {
   try {
+    console.log('=== PATCH SAVINGS ===');
+    console.log('Wallet ID:', req.params.walletId);
+    console.log('User ID:', req.userId);
+    console.log('Body:', req.body);
+    
     const { name, is_shared } = req.body;
     const coupleId = await getCoupleId(req.userId);
-    await pool.query(
+    
+    const result = await pool.query(
       `UPDATE savings_wallets
        SET name = COALESCE($1, name),
            is_shared = COALESCE($2, is_shared),
            couple_id = CASE WHEN COALESCE($2, is_shared) = TRUE THEN $3 ELSE NULL END
-       WHERE id=$4 AND owner_user_id=$5`,
+       WHERE id=$4 AND owner_user_id=$5
+       RETURNING *`,
       [name || null, typeof is_shared === "boolean" ? is_shared : null, coupleId, req.params.walletId, req.userId]
     );
+    
+    console.log('Rows affected:', result.rowCount);
+    console.log('Updated wallet:', result.rows[0]);
+    
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Carteira não encontrada ou você não é o dono" });
+    }
+    
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: "Erro ao editar carteira" });
+    console.error('Erro detalhado no PATCH savings:', err);
+    res.status(500).json({ error: "Erro ao editar carteira: " + err.message });
   }
 });
 

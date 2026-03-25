@@ -471,50 +471,36 @@ JOIN expenses e ON e.id = i.expense_id
 
 })
 app.get("/dashboard/alerts", async (req, res) => {
-
   try {
-
     const result = await pool.query(`
-      SELECT service, duedate, amount
+      SELECT e.service, i.duedate, i.amount
       FROM installments i
-      JOIN expenses e ON e.id=i.expense_id
-      WHERE duedate BETWEEN NOW() AND NOW() + interval '7 days'
-      ORDER BY duedate
+      JOIN expenses e ON e.id = i.expense_id
+      WHERE i.duedate BETWEEN NOW() AND NOW() + interval '7 days'
+      ORDER BY i.duedate
     `);
-
     res.json(result.rows);
-
   } catch (err) {
-
     console.error(err);
     res.json([]);
-
   }
-
 });
 
 app.get("/dashboard/monthly", async (req, res) => {
-
   try {
-
     const result = await pool.query(`
       SELECT 
-      TO_CHAR(duedate,'Mon') as month,
-      SUM(amount) as total
-      FROM installments
-      GROUP BY month
-      ORDER BY MIN(duedate)
+        TO_CHAR(i.duedate,'Mon') as month,
+        SUM(i.amount) as total
+      FROM installments i
+      GROUP BY TO_CHAR(i.duedate,'Mon')
+      ORDER BY MIN(i.duedate)
     `);
-
     res.json(result.rows);
-
   } catch (err) {
-
     console.error(err);
     res.json([]);
-
   }
-
 });
 
 

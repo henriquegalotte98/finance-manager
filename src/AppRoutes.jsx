@@ -10,6 +10,7 @@ import Economias from "./components/Economias.jsx";
 import Market from "./components/Market";
 import Travel from "./components/Travel";
 import PrivateRoute from "./components/PrivateRoute.jsx";
+import Register from './pages/Register';
 
 export default function AppRoutes() {
   const { token } = useAuth();
@@ -17,12 +18,13 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-
+      <Route path="/register" element={<Register />} />
       <Route
         path="/app/*"
         element={
           <PrivateRoute>
             <Routes>
+              <Route path="/register" element={<Register />} />
               <Route path="" element={<Dashboard />} />
               <Route path="importfile" element={<ImportFile />} />
               <Route path="profile" element={<Profile />} />

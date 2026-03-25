@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../components/AuthContext";
 import { useNavigate } from "react-router-dom";
-
+import { Link } from 'react-router-dom';
 import api from "../services/api";
 
 
@@ -61,7 +61,12 @@ function Login() {
         </div>
         <button type="submit">Login</button>
       </form>
+      <div className="register-link">
+        Não tem uma conta? <Link to="/register">Cadastre-se</Link>
+      </div>
+
     </div>
+
   );
 }
 
