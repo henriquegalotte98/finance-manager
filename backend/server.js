@@ -53,7 +53,7 @@ app.get("/healthz", (_req, res) => {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadsDir = path.join(__dirname, "uploads");
-const publicApiBaseUrl = process.env.PUBLIC_API_BASE_URL || "https://finance-manager-irdb.onrender.com";
+const publicApiBaseUrl = process.env.PUBLIC_API_BASE_URL || "http://localhost:3000";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
