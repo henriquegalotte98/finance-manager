@@ -80,7 +80,10 @@ cloudinary.config({
 
 
 // ================= MULTER =================
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+});
 
 
 // ================= USER =================
@@ -114,12 +117,16 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     console.log("REQ.BODY:", req.body);
 
     if (!req.file) {
-      return res.status(400).json({ error: "Arquivo não enviado" });
+      return res.status(400).json({ error: "Nenhum arquivo enviado" });
     }
 
     const userId = req.body.userId;
     if (!userId) {
       return res.status(400).json({ error: "userId não informado" });
+    }
+
+    if (!process.env.CLOUDINARY_CLOUD_NAME) {
+      throw new Error("Cloudinary não configurado");
     }
 
     const uploadResult = await new Promise((resolve, reject) => {
@@ -140,26 +147,28 @@ app.post("/upload", upload.single("file"), async (req, res) => {
       stream.end(req.file.buffer);
     });
 
-    const resultDb = await pool.query(
+    console.log("CLOUDINARY RESULT:", uploadResult);
+
+    const result = await pool.query(
       "INSERT INTO arquivos (nome, caminho) VALUES ($1, $2) RETURNING id",
       [req.file.originalname, uploadResult.secure_url]
     );
 
-    const arquivoId = resultDb.rows[0].id;
+    const novoArquivoId = result.rows[0].id;
 
     await pool.query(
       "UPDATE users SET profile_image_id=$1 WHERE id=$2",
-      [arquivoId, userId]
+      [novoArquivoId, userId]
     );
 
-    res.json({
-      success: true,
-      imageUrl: uploadResult.secure_url
-    });
+    res.json({ success: true, novoArquivoId });
 
   } catch (err) {
-    console.error("🔥 ERRO UPLOAD:", err);
-    res.status(500).json({ error: err.message });
+    console.error("ERRO REAL UPLOAD:", err);
+    res.status(500).json({
+      error: err.message,
+      stack: err.stack
+    });
   }
 });
 
