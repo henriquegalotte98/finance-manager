@@ -7,12 +7,12 @@ import { v2 as cloudinary } from "cloudinary";
 
 import "./db.js";
 
+import cors from "cors"
 import coupleRoutes from "./routes/couple.routes.js"
 import { getUserCoupleId } from "./utils/getUserCouple.js"
 import authRoutes from "./routes/auth.routes.js"
 import expensesRoutes from "./routes/expenses.routes.js"
 import express from "express"
-import cors from "cors"
 import pkg from "pg"
 import bodyParser from "body-parser"
 import { pool } from "./db.js"
@@ -28,10 +28,12 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://finance-manager-chi-ashen.vercel.app"
+    "https://finance-manager-tpzb.vercel.app"
   ],
   credentials: true
 }));
+
+app.options("*", cors());
 
 app.use(express.json());
 app.use("/expenses", expensesRoutes);
