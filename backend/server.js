@@ -96,7 +96,7 @@ app.use("/uploads", express.static(uploadsDir));
 
 console.log("DATABASE_URL =", process.env.DATABASE_URL)
 
-const storage = multer.diskStorage({
+const storage = multer.memoryStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
   filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
 });
@@ -186,11 +186,20 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     );
     const oldImageId = oldImageResult.rows[0]?.profile_image_id;
 
-    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-      folder: "finance-manager/profile",
-      resource_type: "image"
-    });
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: "finance-manager/profile",
+          resource_type: "image"
+        },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result);
+        }
+      );
 
+      stream.end(req.file.buffer);
+    });
     const result = await pool.query(
       "INSERT INTO arquivos (nome, caminho) VALUES ($1, $2) RETURNING id",
       [req.file.originalname, uploadResult.secure_url]
