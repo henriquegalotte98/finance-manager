@@ -57,7 +57,7 @@ app.use(bodyParser.json());
 
 
 // ================= ROUTES =================
-app.use("/expenses", expensesRoutes);
+//app.use("/expenses", expensesRoutes);
 app.use("/couple", coupleRoutes);
 app.use("/auth", authRoutes);
 app.use("/features", featureRoutes);
@@ -202,9 +202,10 @@ function totalInstallments(numTimes, recurrence) {
   if (recurrence === "monthly") return 12;
   if (recurrence === "weekly") return 52;
   if (recurrence === "yearly") return 5;
-  if (recurrence === "none") return numTimes;
 
-  return numTimes && numTimes > 0 ? numTimes : 1;
+  if (!numTimes || numTimes <= 0) return 1;
+
+  return numTimes;
 }
 
 app.post("/expenses", async (req, res) => {
