@@ -525,8 +525,7 @@ app.put("/users/:id/profile-image", async (req, res) => {
   }
 });
 
-
-// Exportar para Vercel
+// Exportar para Vercel (serverless)
 export default app;
 
 // Para desenvolvimento local
