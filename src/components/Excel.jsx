@@ -149,6 +149,7 @@ function Excel({ activeApp }) {
         </select>
 
         <button
+          onClick={() => addExpense(API_URL)}
           className="eco-btn eco-btn-primary"
           disabled={loading}
         >

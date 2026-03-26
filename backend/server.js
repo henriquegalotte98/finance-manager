@@ -114,7 +114,10 @@ app.get("/users/me", authMiddleware, async (req, res) => {
   }
 });
 
-
+//===================test====================
+app.get("/ping", (req, res) => {
+  res.send("pong");
+});
 // ================= UPLOAD =================
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
@@ -227,6 +230,41 @@ app.post("/expenses", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send("Erro ao adicionar despesa");
+  }
+});
+
+
+app.get("/expenses/month/:year/:month", async (req, res) => {
+  console.log("ROTA MONTH CHAMADA"); // 👈 adiciona isso
+
+  try {
+    const { year, month } = req.params;
+
+    const result = await pool.query(
+      `SELECT 
+        i.id,
+        i.installment_number,
+        i.amount,
+        i.duedate,
+        e.service,
+        e.price,
+        e.paymentmethod,
+        e.numbertimes,
+        e.recurrence,
+        e.id as expense_id
+       FROM installments i
+       JOIN expenses e ON e.id = i.expense_id
+       WHERE EXTRACT(YEAR FROM i.duedate) = $1
+       AND EXTRACT(MONTH FROM i.duedate) = $2
+       ORDER BY i.duedate`,
+      [year, month]
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Erro ao buscar parcelas");
   }
 });
 
