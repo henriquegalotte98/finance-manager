@@ -84,22 +84,10 @@ cloudinary.config({
 
 
 
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-
-// Servir a pasta uploads como estática
-app.use("/uploads", express.static(uploadsDir));
-
-
 
 console.log("DATABASE_URL =", process.env.DATABASE_URL)
 
-const storage = multer.memoryStorage({
-  destination: (req, file, cb) => cb(null, uploadsDir),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
-});
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 app.get("/users/me", authMiddleware, async (req, res) => {
