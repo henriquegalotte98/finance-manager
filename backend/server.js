@@ -224,14 +224,14 @@ app.post("/expenses", async (req, res) => {
     const total = totalInstallments(numTimes, recurrence);
 
     for (let i = 0; i < total; i++) {
-  const vencimento = generateDate(dueDate, recurrence, i);
+      const vencimento = generateDate(dueDate, recurrence, i);
 
-  await pool.query(
-    `INSERT INTO installments (expense_id, installment_number, amount, duedate)
-     VALUES ($1,$2,$3,$4)`,
-    [expenseId, i + 1, parcelaValor, vencimento]
-  );
-}
+      await pool.query(
+        `INSERT INTO installments (expense_id, installment_number, amount, duedate)
+         VALUES ($1,$2,$3,$4::date)`,
+        [expenseId, i + 1, parcelaValor, vencimento.toISOString().split("T")[0]]
+      );
+    }
 
     res.json({ message: "Despesa criada" });
 
