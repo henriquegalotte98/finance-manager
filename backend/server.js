@@ -165,8 +165,8 @@ WHERE u.id=$1`,
 
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
-    console.log("req.file:", req.file);
-    console.log("req.body:", req.body);
+    console.log("REQ.FILE:", req.file);
+    console.log("REQ.BODY:", req.body);
 
     if (!req.file) {
       return res.status(400).json({ error: "Nenhum arquivo enviado" });
@@ -177,15 +177,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
       return res.status(400).json({ error: "userId não informado" });
     }
 
-    console.log("Arquivo recebido:", req.file);
-    console.log("UserId recebido:", userId);
-
-    const oldImageResult = await pool.query(
-      "SELECT profile_image_id FROM users WHERE id=$1",
-      [userId]
-    );
-    const oldImageId = oldImageResult.rows[0]?.profile_image_id;
-
+    // 🔥 Upload direto via buffer (CORRETO PRA VERCEL)
     const uploadResult = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
@@ -193,35 +185,36 @@ app.post("/upload", upload.single("file"), async (req, res) => {
           resource_type: "image"
         },
         (error, result) => {
-          if (error) return reject(error);
+          if (error) {
+            console.error("Cloudinary error:", error);
+            return reject(error);
+          }
           resolve(result);
         }
       );
 
       stream.end(req.file.buffer);
     });
+
+    console.log("CLOUDINARY RESULT:", uploadResult);
+
     const result = await pool.query(
       "INSERT INTO arquivos (nome, caminho) VALUES ($1, $2) RETURNING id",
       [req.file.originalname, uploadResult.secure_url]
     );
+
     const novoArquivoId = result.rows[0].id;
 
-    await pool.query("UPDATE users SET profile_image_id=$1 WHERE id=$2", [
-      novoArquivoId,
-      userId,
-    ]);
-
-    if (oldImageId) {
-      await pool.query("DELETE FROM arquivos WHERE id=$1", [oldImageId]);
-    }
+    await pool.query(
+      "UPDATE users SET profile_image_id=$1 WHERE id=$2",
+      [novoArquivoId, userId]
+    );
 
     res.json({ success: true, novoArquivoId });
-  } catch (err) {
-    console.log("req.file:", req.file);
-    console.log("req.body:", req.body);
 
-    console.error("Erro no upload:", err);
-    res.status(500).json({ error: "Erro no upload" });
+  } catch (err) {
+    console.error("ERRO REAL UPLOAD:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 
