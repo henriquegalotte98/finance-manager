@@ -248,6 +248,24 @@ app.get("/dashboard/alerts", async (_req, res) => {
   }
 });
 
+app.get("/dashboard/monthly", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        TO_CHAR(i.duedate,'Mon') as month,
+        SUM(i.amount) as total
+      FROM installments i
+      GROUP BY TO_CHAR(i.duedate,'Mon')
+      ORDER BY MIN(i.duedate)
+    `);
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.json([]);
+  }
+});
+
 
 // ================= INIT =================
 ensureFeatureSchema().catch(console.error);
