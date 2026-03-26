@@ -1,5 +1,4 @@
 import { create } from "zustand"
-
 import api from "../services/api"
 
 export const useExpenseStore = create((set, get) => ({
@@ -39,7 +38,7 @@ export const useExpenseStore = create((set, get) => ({
       const res = await api.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
       set({ expenses: Array.isArray(res.data) ? res.data : [] })
     } catch (err) {
-      console.error(err)
+      console.error("Erro ao carregar mês:", err)
     }
 
     set({ loading: false })
@@ -49,16 +48,33 @@ export const useExpenseStore = create((set, get) => ({
 
     const state = get()
 
+    // ✅ VALIDAÇÃO
+    if (!state.service || !state.price || !state.dueDate) {
+      alert("Preencha todos os campos obrigatórios")
+      return
+    }
+
+    const parsedPrice = parseFloat(state.price)
+
+    if (isNaN(parsedPrice)) {
+      alert("Preço inválido")
+      return
+    }
+
     const payload = {
       service: state.service,
-      price: parseFloat(state.price),
+      price: parsedPrice,
       dueDate: state.dueDate,
       paymentMethod: state.paymentMethod,
       numberTimes: state.numberTimes,
       recurrence: state.recurrence
     }
 
+    console.log("📤 Enviando payload:", payload)
+
     try {
+
+      set({ loading: true })
 
       if (state.editId) {
         await api.put(`${API_URL}/expenses/${state.editId}`, payload)
@@ -66,12 +82,26 @@ export const useExpenseStore = create((set, get) => ({
         await api.post(`${API_URL}/expenses`, payload)
       }
 
+      // ✅ AJUSTA O MÊS AUTOMATICAMENTE
+      const date = new Date(state.dueDate)
+
+      set({
+        selectedMonth: date.getMonth() + 1,
+        selectedYear: date.getFullYear()
+      })
+
+      // ✅ RECARREGA LISTA
       await get().loadMonth(API_URL)
+
+      // ✅ LIMPA FORM
       get().resetForm()
 
     } catch (err) {
-      console.error(err)
+      console.error("Erro ao salvar despesa:", err)
+      alert("Erro ao salvar despesa")
     }
+
+    set({ loading: false })
   },
 
   removeExpense: async (API_URL, id) => {
@@ -79,7 +109,7 @@ export const useExpenseStore = create((set, get) => ({
       await api.delete(`${API_URL}/expenses/${id}`)
       await get().loadMonth(API_URL)
     } catch (err) {
-      console.error(err)
+      console.error("Erro ao remover:", err)
     }
   },
 
