@@ -25,39 +25,34 @@ import featureRoutes, { ensureFeatureSchema } from "./routes/feature.routes.js";
 const app = express();
 
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://finance-manager-chi-ashen.vercel.app",
-  "https://finance-manager-tpzb.vercel.app"
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true); // permite Postman, etc
-
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true
-}));
-
-app.options("*", cors());
-
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", req.headers.origin);
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  const allowedOrigins = [
+    "http://localhost:5173",
+    "https://finance-manager-chi-ashen.vercel.app",
+    "https://finance-manager-tpzb.vercel.app"
+  ];
 
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  // 🔥 ESSENCIAL: responder preflight
   if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
+    return res.status(200).end();
   }
 
   next();
 });
+
+
+
+
 
 app.use(express.json());
 app.use("/expenses", expensesRoutes);
