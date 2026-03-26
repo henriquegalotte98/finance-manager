@@ -19,6 +19,11 @@ import { authMiddleware } from "./middleware/auth.js";
 
 const app = express();
 
+console.log("ENV CHECK:", {
+  cloud: process.env.CLOUDINARY_CLOUD_NAME,
+  key: process.env.CLOUDINARY_API_KEY,
+  secret: process.env.CLOUDINARY_API_SECRET ? "OK" : "MISSING"
+});
 
 // ================= CORS =================
 app.use((req, res, next) => {
