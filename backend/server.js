@@ -202,6 +202,7 @@ function totalInstallments(numTimes, recurrence) {
   if (recurrence === "monthly") return 12;
   if (recurrence === "weekly") return 52;
   if (recurrence === "yearly") return 5;
+  if (recurrence === "none") return numTimes;
 
   return numTimes && numTimes > 0 ? numTimes : 1;
 }
@@ -223,14 +224,14 @@ app.post("/expenses", async (req, res) => {
     const total = totalInstallments(numTimes, recurrence);
 
     for (let i = 0; i < total; i++) {
-      const vencimento = new Date(dueDate + "T00:00:00")
+  const vencimento = generateDate(dueDate, recurrence, i);
 
-      await pool.query(
-        `INSERT INTO installments (expense_id, installment_number, amount, duedate)
-         VALUES ($1,$2,$3,$4)`,
-        [expenseId, i + 1, parcelaValor, vencimento]
-      );
-    }
+  await pool.query(
+    `INSERT INTO installments (expense_id, installment_number, amount, duedate)
+     VALUES ($1,$2,$3,$4)`,
+    [expenseId, i + 1, parcelaValor, vencimento]
+  );
+}
 
     res.json({ message: "Despesa criada" });
 
