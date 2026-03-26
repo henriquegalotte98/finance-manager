@@ -1,7 +1,10 @@
 import axios from "axios";
 
+// Use a variável de ambiente ou fallback para localhost
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 const api = axios.create({
-  baseURL: "http://localhost:3000", // Usando backend local
+  baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
   },
