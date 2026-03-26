@@ -262,8 +262,8 @@ app.get("/expenses/month/:year/:month", async (req, res) => {
         e.id as expense_id
        FROM installments i
        JOIN expenses e ON e.id = i.expense_id
-       WHERE i.duedate >= DATE_TRUNC('month', TO_DATE($1 || '-' || $2 || '-01', 'YYYY-MM-DD'))
-       AND i.duedate < DATE_TRUNC('month', TO_DATE($1 || '-' || $2 || '-01', 'YYYY-MM-DD')) + INTERVAL '1 month'
+       WHERE EXTRACT(YEAR FROM i.duedate) = $1
+       AND EXTRACT(MONTH FROM i.duedate) = $2
        ORDER BY i.duedate`,
       [year, month]
     );
