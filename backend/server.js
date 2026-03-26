@@ -214,31 +214,37 @@ app.post("/expenses", async (req, res) => {
 
     const numTimes = parseInt(numberTimes || 1);
 
+    // ⚠️ pega user do token (ou fixa temporariamente)
+    const userId = req.userId; // 👉 TEMPORÁRIO só pra testar
+
     const expense = await pool.query(
-      `INSERT INTO expenses (service, price, paymentmethod, numbertimes, duedate, recurrence)
-       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-      [service, price, paymentMethod, numTimes, dueDate, recurrence]
+      `INSERT INTO expenses 
+       (user_id, service, price, paymentmethod, numbertimes, recurrence, expense_date)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)
+       RETURNING *`,
+      [userId, service, price, paymentMethod, numTimes, recurrence, dueDate]
     );
 
     const expenseId = expense.rows[0].id;
+
     const parcelaValor = price / numTimes;
-    const total = totalInstallments(numTimes, recurrence);
+    const total = numTimes;
 
     for (let i = 0; i < total; i++) {
-      const vencimento = generateDate(dueDate, recurrence, i);
+      const vencimento = new Date(dueDate);
 
       await pool.query(
         `INSERT INTO installments (expense_id, installment_number, amount, duedate)
-         VALUES ($1,$2,$3,$4::date)`,
-        [expenseId, i + 1, parcelaValor, vencimento.toISOString().split("T")[0]]
+         VALUES ($1,$2,$3,$4)`,
+        [expenseId, i + 1, parcelaValor, vencimento]
       );
     }
 
     res.json({ message: "Despesa criada" });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Erro ao adicionar despesa");
+    console.error("🔥 ERRO REAL:", err); // 👈 IMPORTANTE
+    res.status(500).json({ error: err.message });
   }
 });
 
