@@ -25,11 +25,22 @@ import featureRoutes, { ensureFeatureSchema } from "./routes/feature.routes.js";
 const app = express();
 
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://finance-manager-chi-ashen.vercel.app",
+  "https://finance-manager-tpzb.vercel.app"
+];
+
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://finance-manager-tpzb.vercel.app"
-  ],
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // permite Postman, etc
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true
 }));
 
