@@ -183,20 +183,27 @@ app.post("/upload", upload.single("file"), async (req, res) => {
 
 // ================= EXPENSES =================
 function generateDate(baseDate, recurrence, index) {
-  let d = new Date(baseDate);
 
-  if (recurrence === "monthly") d.setMonth(d.getMonth() + index);
-  else if (recurrence === "weekly") d.setDate(d.getDate() + 7 * index);
-  else if (recurrence === "yearly") d.setFullYear(d.getFullYear() + index);
+  let d = new Date(baseDate + "T00:00:00");
+
+  if (recurrence === "monthly") {
+    d.setMonth(d.getMonth() + index);
+  } else if (recurrence === "weekly") {
+    d.setDate(d.getDate() + (7 * index));
+  } else if (recurrence === "yearly") {
+    d.setFullYear(d.getFullYear() + index);
+  }
 
   return d;
 }
 
 function totalInstallments(numTimes, recurrence) {
+
   if (recurrence === "monthly") return 12;
   if (recurrence === "weekly") return 52;
   if (recurrence === "yearly") return 5;
-  return numTimes;
+
+  return numTimes && numTimes > 0 ? numTimes : 1;
 }
 
 app.post("/expenses", async (req, res) => {
