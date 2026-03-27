@@ -214,37 +214,37 @@ app.post("/expenses", async (req, res) => {
 
     const numTimes = parseInt(numberTimes || 1);
 
-    // ⚠️ pega user do token (ou fixa temporariamente)
-    const userId = req.userId; // 👉 TEMPORÁRIO só pra testar
-
+    // ✅ 1. cria a despesa primeiro
     const expense = await pool.query(
       `INSERT INTO expenses 
-       (user_id, service, price, paymentmethod, numbertimes, recurrence, expense_date)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)
-       RETURNING *`,
-      [userId, service, price, paymentMethod, numTimes, recurrence, dueDate]
+       (service, price, paymentmethod, numbertimes, recurrence)
+       VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+      [service, price, paymentMethod, numTimes, recurrence]
     );
 
+    // ✅ 2. pega o ID DEPOIS do insert
     const expenseId = expense.rows[0].id;
 
     const parcelaValor = price / numTimes;
-    const total = numTimes;
+    const total = totalInstallments(numTimes, recurrence);
 
+    // ✅ 3. cria parcelas usando o ID
     for (let i = 0; i < total; i++) {
-      const vencimento = new Date(dueDate);
+      const vencimento = new Date(dueDate + "T00:00:00");
 
       await pool.query(
-        `INSERT INTO installments (expense_id, installment_number, amount, duedate)
-         VALUES ($1,$2,$3,$4)`,
-        [expenseId, i + 1, parcelaValor, vencimento]
+        `INSERT INTO installments 
+         (expense_id, installment_number, amount, duedate, total_installments)
+         VALUES ($1,$2,$3,$4,$5)`,
+        [expenseId, i + 1, parcelaValor, vencimento, total]
       );
     }
 
     res.json({ message: "Despesa criada" });
 
   } catch (err) {
-    console.error("🔥 ERRO REAL:", err); // 👈 IMPORTANTE
-    res.status(500).json({ error: err.message });
+    console.error("🔥 ERRO REAL:", err);
+    res.status(500).send("Erro ao adicionar despesa");
   }
 });
 
