@@ -18,6 +18,8 @@ function AppRoutes() {
       {/* ROTAS PRIVADAS */}
       <Route element={<PrivateRoute />}>
         <Route element={<PrivateLayout />}>
+
+          <Route path="/app" element={<Navigate to="/app/dashboard" />} />
           <Route path="/app/dashboard" element={<Dashboard />} />
           <Route path="/app/excel" element={<Excel />} />
         </Route>
