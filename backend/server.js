@@ -57,7 +57,7 @@ app.use(bodyParser.json());
 
 
 // ================= ROUTES =================
-app.use("/expenses", expensesRoutes);
+//app.use("/expenses", expensesRoutes);
 app.use("/couple", coupleRoutes);
 app.use("/auth", authRoutes);
 app.use("/features", featureRoutes);
@@ -248,9 +248,10 @@ app.put("/expenses/:id", async (req, res) => {
 
 app.post("/expenses", async (req, res) => {
   try {
+    console.log("🔥 INICIOU POST /expenses");
     const { service, price, paymentMethod, numberTimes, dueDate, recurrence } = req.body;
 
-    console.log("BODY:", req.body);
+    console.log("📦 BODY:", req.body);
 
     // ✅ validações básicas
     if (!service || !price || !dueDate) {
@@ -261,6 +262,10 @@ app.post("/expenses", async (req, res) => {
     const numTimes = Number(numberTimes) || 1;
     const isRecurring = recurrence !== "none";
 
+    console.log("💰 parsedPrice:", parsedPrice);
+    console.log("🔢 numTimes:", numTimes);
+    console.log("🔁 recurrence:", recurrence);
+
     let totalInstallmentsCount;
 
     if (isRecurring) {
@@ -268,7 +273,7 @@ app.post("/expenses", async (req, res) => {
     } else {
       totalInstallmentsCount = numTimes;
     }
-
+    console.log("📊 totalInstallmentsCount:", totalInstallmentsCount);
     // ✅ proteção contra NaN
     if (!totalInstallmentsCount || isNaN(totalInstallmentsCount)) {
       return res.status(400).json({ error: "Número de parcelas inválido" });
@@ -291,9 +296,15 @@ app.post("/expenses", async (req, res) => {
     );
 
     const expenseId = expense.rows[0].id;
+    if (!totalInstallmentsCount || isNaN(totalInstallmentsCount)) {
+      console.log("❌ ERRO: parcelas inválidas");
+      return res.status(400).json({ error: "Parcelas inválidas" });
+    }
 
+    console.log("➡️ Entrou no loop de parcelas");
     // 2️⃣ cria parcelas
     for (let i = 0; i < totalInstallmentsCount; i++) {
+      console.log("🧾 Criando parcela:", i + 1);
       let vencimento;
 
       if (isRecurring) {
