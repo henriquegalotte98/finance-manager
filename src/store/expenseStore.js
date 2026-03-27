@@ -2,125 +2,123 @@ import { create } from "zustand"
 import api from "../services/api"
 
 export const useExpenseStore = create((set, get) => ({
-
-  service: "",
-  price: "",
-  dueDate: "",
-  paymentMethod: "credit_card",
-  numberTimes: 1,
-  recurrence: "none",
-
-  editId: null,
-  loading: false,
-  expenses: [],
-
-  selectedMonth: new Date().getMonth() + 1,
-  selectedYear: new Date().getFullYear(),
-
-  setField: (field, value) => set({ [field]: value }),
-
-  resetForm: () => set({
-    service: "",
-    price: "",
-    dueDate: "",
-    paymentMethod: "credit_card",
-    numberTimes: 1,
-    recurrence: "none",
-    editId: null
-  }),
-
-  loadMonth: async (API_URL) => {
-    const { selectedMonth, selectedYear } = get()
-
-    set({ loading: true })
-
-    try {
-      const res = await api.get(`${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`)
-      set({ expenses: Array.isArray(res.data) ? res.data : [] })
-    } catch (err) {
-      console.error("Erro ao carregar mês:", err)
-    }
-
-    set({ loading: false })
-  },
-
+  // ... outros estados
+  
   addExpense: async (API_URL) => {
-
-    const state = get()
-
-    // ✅ VALIDAÇÃO
-    if (!state.service || !state.price || !state.dueDate) {
-      alert("Preencha todos os campos obrigatórios")
-      return
-    }
-
-    const parsedPrice = parseFloat(state.price)
-
-    if (isNaN(parsedPrice)) {
-      alert("Preço inválido")
-      return
-    }
-
-    const payload = {
-      service: state.service,
-      price: parsedPrice,
-      dueDate: state.dueDate,
-      paymentMethod: state.paymentMethod,
-      numberTimes: state.numberTimes,
-      recurrence: state.recurrence
-    }
-
-    console.log("📤 Enviando payload:", payload)
-
+    const { 
+      service, 
+      price, 
+      dueDate, 
+      paymentMethod, 
+      numberTimes, 
+      recurrence,
+      editId,
+      resetForm,
+      loadMonth,
+      selectedMonth,
+      selectedYear
+    } = get();
+    
+    set({ loading: true });
+    
     try {
-
-      set({ loading: true })
-
-      if (state.editId) {
-        await api.put(`${API_URL}/expenses/${state.editId}`, payload)
-      } else {
-        await api.post(`${API_URL}/expenses`, payload)
+      const expenseData = {
+        service,
+        price: parseFloat(price),
+        paymentMethod,
+        numberTimes: parseInt(numberTimes),
+        dueDate,
+        recurrence: recurrence || "none"
+      };
+      
+      let url = `${API_URL}/expenses`;
+      let method = "POST";
+      
+      if (editId) {
+        url = `${API_URL}/expenses/${editId}`;
+        method = "PUT";
       }
-
-      // ✅ AJUSTA O MÊS AUTOMATICAMENTE
-      const date = new Date(state.dueDate)
-
-      set({
-        selectedMonth: date.getMonth() + 1,
-        selectedYear: date.getFullYear()
-      })
-
-      // ✅ RECARREGA LISTA
-      await get().loadMonth(API_URL)
-
-      // ✅ LIMPA FORM
-      get().resetForm()
-
-    } catch (err) {
-      console.error("Erro ao salvar despesa:", err)
-      alert("Erro ao salvar despesa")
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify(expenseData)
+      });
+      
+      if (!response.ok) {
+        throw new Error("Erro ao salvar despesa");
+      }
+      
+      // Resetar o formulário
+      resetForm();
+      
+      // Recarregar as despesas do mês atual
+      await get().loadMonth(API_URL);
+      
+    } catch (error) {
+      console.error("Erro ao adicionar despesa:", error);
+      alert("Erro ao salvar despesa: " + error.message);
+    } finally {
+      set({ loading: false });
     }
-
-    set({ loading: false })
   },
-
-  removeExpense: async (API_URL, id) => {
+  
+  loadMonth: async (API_URL) => {
+    const { selectedYear, selectedMonth } = get();
+    
+    set({ loading: true });
+    
     try {
-      await api.delete(`${API_URL}/expenses/${id}`)
-      await get().loadMonth(API_URL)
-    } catch (err) {
-      console.error("Erro ao remover:", err)
+      const response = await fetch(
+        `${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`,
+        {
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error("Erro ao carregar despesas");
+      }
+      
+      const data = await response.json();
+      set({ expenses: data });
+      
+    } catch (error) {
+      console.error("Erro ao carregar mês:", error);
+      set({ expenses: [] });
+    } finally {
+      set({ loading: false });
     }
   },
-
-  startEdit: (exp) => set({
-    service: exp.service,
-    price: exp.amount?.toString() || "0",
-    dueDate: new Date(exp.duedate).toISOString().split("T")[0],
-    paymentMethod: exp.paymentmethod,
-    numberTimes: exp.numbertimes,
-    recurrence: exp.recurrence || "none",
-    editId: exp.expense_id
-  })
-
-}))
+  
+  removeExpense: async (API_URL, expenseId) => {
+    if (!window.confirm("Tem certeza que deseja excluir esta despesa e todas as suas parcelas?")) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${API_URL}/expenses/${expenseId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error("Erro ao deletar despesa");
+      }
+      
+      // Recarregar as despesas do mês atual
+      await get().loadMonth(API_URL);
+      
+    } catch (error) {
+      console.error("Erro ao deletar:", error);
+      alert("Erro ao deletar despesa: " + error.message);
+    }
+  }
+}));

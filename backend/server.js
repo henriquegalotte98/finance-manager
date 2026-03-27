@@ -183,29 +183,35 @@ app.post("/upload", upload.single("file"), async (req, res) => {
 
 // ================= EXPENSES =================
 function generateDate(baseDate, recurrence, index) {
-
   let d = new Date(baseDate + "T00:00:00");
-
+  
   if (recurrence === "monthly") {
+    // Para recorrência mensal, adiciona 1 mês para cada índice
     d.setMonth(d.getMonth() + index);
   } else if (recurrence === "weekly") {
+    // Para recorrência semanal, adiciona 7 dias para cada índice
     d.setDate(d.getDate() + (7 * index));
   } else if (recurrence === "yearly") {
+    // Para recorrência anual, adiciona 1 ano para cada índice
     d.setFullYear(d.getFullYear() + index);
   }
-
+  
   return d;
 }
 
-function totalInstallments(numTimes, recurrence) {
 
+function totalInstallments(numTimes, recurrence) {
+  // Se não for recorrência ou for crédito/crediário, usa o número de parcelas
+  if (recurrence === "none") {
+    return numTimes || 1;
+  }
+  
+  // Para recorrências, define um limite de tempo (ex: 12 meses, 52 semanas, 5 anos)
   if (recurrence === "monthly") return 12;
   if (recurrence === "weekly") return 52;
   if (recurrence === "yearly") return 5;
-
-  if (!numTimes || numTimes <= 0) return 1;
-
-  return numTimes;
+  
+  return 1;
 }
 
 app.put("/expenses/:id", async (req, res) => {
@@ -213,64 +219,100 @@ app.put("/expenses/:id", async (req, res) => {
     const { id } = req.params;
     const { service, price, paymentMethod, numberTimes, dueDate, recurrence } = req.body;
 
+    // Buscar a despesa existente
+    const existingExpense = await pool.query(
+      "SELECT * FROM expenses WHERE id = $1",
+      [id]
+    );
+    
+    if (existingExpense.rows.length === 0) {
+      return res.status(404).json({ error: "Despesa não encontrada" });
+    }
+    
+    // Atualizar a despesa
     const result = await pool.query(
       `UPDATE expenses
        SET service=$1, price=$2, paymentmethod=$3, numbertimes=$4, recurrence=$5
        WHERE id=$6 RETURNING *`,
       [service, price, paymentMethod, numberTimes, recurrence, id]
     );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Despesa não encontrada" });
-    }
-
+    
+    // Opcional: Recriar as parcelas após edição
+    // Você pode optar por deletar as parcelas antigas e criar novas
+    
     res.json(result.rows[0]);
   } catch (err) {
     console.error("🔥 ERRO PUT:", err);
-    res.status(500).send("Erro ao atualizar despesa");
+    res.status(500).json({ error: "Erro ao atualizar despesa" });
   }
 });
+
 
 app.post("/expenses", async (req, res) => {
   try {
     const { service, price, paymentMethod, numberTimes, dueDate, recurrence } = req.body;
 
     const numTimes = parseInt(numberTimes || 1);
-
-    // ✅ 1. cria a despesa primeiro
+    const isRecurring = recurrence !== "none";
+    
+    // Se for recorrência (mensal, semanal, anual), o número de parcelas é definido pela função totalInstallments
+    // Se for compra parcelada (cartão/crediário), usa o numberTimes informado
+    let totalInstallmentsCount;
+    if (isRecurring) {
+      totalInstallmentsCount = totalInstallments(numTimes, recurrence);
+    } else {
+      totalInstallmentsCount = numTimes;
+    }
+    
+    // Valor por parcela
+    const installmentAmount = price / totalInstallmentsCount;
+    
+    // 1. Cria a despesa
     const expense = await pool.query(
       `INSERT INTO expenses 
        (service, price, paymentmethod, numbertimes, recurrence)
        VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-      [service, price, paymentMethod, numTimes, recurrence]
+      [service, price, paymentMethod, totalInstallmentsCount, recurrence]
     );
-
-    // ✅ 2. pega o ID DEPOIS do insert
+    
     const expenseId = expense.rows[0].id;
-
-    const parcelaValor = price / numTimes;
-    const total = totalInstallments(numTimes, recurrence);
-
-    // ✅ 3. cria parcelas usando o ID
-    for (let i = 0; i < total; i++) {
-      const vencimento = generateDate(dueDate, recurrence, i);
-
+    
+    // 2. Cria as parcelas
+    for (let i = 0; i < totalInstallmentsCount; i++) {
+      let vencimento;
+      
+      if (isRecurring) {
+        // Para recorrência, gera datas espaçadas (mensal, semanal, anual)
+        vencimento = generateDate(dueDate, recurrence, i);
+      } else {
+        // Para parcelas fixas, usa a mesma data base ou adiciona 1 mês para cartão/crediário
+        if (paymentMethod === "credit_card" || paymentMethod === "credit_store") {
+          // Parcelas de cartão/crediário geralmente vencem 30 dias após a compra, com parcelas mensais
+          let d = new Date(dueDate + "T00:00:00");
+          d.setMonth(d.getMonth() + i);
+          vencimento = d;
+        } else {
+          // Pagamento único, todas as "parcelas" (se houver mais de 1) vencem na mesma data
+          // Isso é raro, mas mantido para consistência
+          vencimento = new Date(dueDate + "T00:00:00");
+        }
+      }
+      
       await pool.query(
         `INSERT INTO installments 
          (expense_id, installment_number, amount, duedate, total_installments)
          VALUES ($1,$2,$3,$4,$5)`,
-        [expenseId, i + 1, parcelaValor, vencimento, total]
+        [expenseId, i + 1, installmentAmount, vencimento, totalInstallmentsCount]
       );
     }
-
-    res.json({ message: "Despesa criada" });
-
+    
+    res.json({ message: "Despesa criada com sucesso", expenseId });
+    
   } catch (err) {
-    console.error("🔥 ERRO REAL:", err);
-    res.status(500).send("Erro ao adicionar despesa");
+    console.error("🔥 ERRO AO CRIAR DESPESA:", err);
+    res.status(500).json({ error: "Erro ao adicionar despesa: " + err.message });
   }
 });
-
 
 app.get("/expenses/month/:year/:month", async (req, res) => {
   console.log("ROTA MONTH CHAMADA"); // 👈 adiciona isso
@@ -306,6 +348,29 @@ app.get("/expenses/month/:year/:month", async (req, res) => {
   }
 });
 
+app.delete("/expenses/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Deletar as parcelas primeiro (por causa da FK)
+    await pool.query("DELETE FROM installments WHERE expense_id = $1", [id]);
+    
+    // Depois deletar a despesa
+    const result = await pool.query(
+      "DELETE FROM expenses WHERE id = $1 RETURNING id",
+      [id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Despesa não encontrada" });
+    }
+    
+    res.json({ message: "Despesa deletada com sucesso" });
+  } catch (err) {
+    console.error("🔥 ERRO AO DELETAR:", err);
+    res.status(500).json({ error: "Erro ao deletar despesa" });
+  }
+});
 
 // ================= DASHBOARD =================
 app.get("/dashboard/month-total/:year/:month", async (req, res) => {
