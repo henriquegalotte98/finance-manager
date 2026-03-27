@@ -1,62 +1,100 @@
-import { Bar } from "react-chartjs-2";
 import { useEffect, useState } from "react";
-import  api  from "../services/api";
+import api from "../services/api";
+import "./ChartMonthly.css";
 
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
-  Legend
-} from "chart.js";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
-  Legend
-);
-
-export default function ChartMonthly() {
-  const [data, setData] = useState(null);
+function ChartMonthly() {
+  const [monthlyData, setMonthlyData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    api.get("/dashboard/monthly")
-      .then(res => {
-        if (!Array.isArray(res.data)) {
-          console.warn("Resposta inesperada:", res.data);
-          setData(null);
-          return;
-        }
+    const fetchMonthlyData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log("Chamando: /dashboard/monthly");
+        
+        const response = await api.get("/dashboard/monthly");
+        
+        // Garantir que monthlyData seja um array
+        const data = response.data;
+        setMonthlyData(Array.isArray(data) ? data : []);
+        
+      } catch (err) {
+        console.error("Erro ao buscar dados mensais:", err);
+        setError("Erro ao carregar gráfico");
+        setMonthlyData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-        const labels = res.data.map(i => i.month);
-        const values = res.data.map(i => i.total);
-
-        setData({
-          labels,
-          datasets: [
-            {
-              label: "Gastos por mês",
-              data: values
-            }
-          ]
-        });
-      })
-      .catch(err => {
-        console.error(err);
-        setData(null);
-      });
+    fetchMonthlyData();
   }, []);
 
-  if (!data) return <p>Carregando gráfico...</p>;
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    }).format(value);
+  };
 
-  return <Bar data={data} />;
+  if (loading) {
+    return (
+      <div className="chart-container">
+        <h3>📈 Gastos por Mês</h3>
+        <div className="loading">Carregando dados...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="chart-container">
+        <h3>📈 Gastos por Mês</h3>
+        <div className="error">{error}</div>
+      </div>
+    );
+  }
+
+  if (monthlyData.length === 0) {
+    return (
+      <div className="chart-container">
+        <h3>📈 Gastos por Mês</h3>
+        <div className="no-data">Nenhum dado disponível</div>
+      </div>
+    );
+  }
+
+  // Encontrar o valor máximo para calcular a largura das barras
+  const maxTotal = Math.max(...monthlyData.map(item => item.total || 0));
+
+  return (
+    <div className="chart-container">
+      <h3>📈 Gastos por Mês</h3>
+      
+      <div className="monthly-chart">
+        {monthlyData.map((item, index) => {
+          const percentage = maxTotal > 0 ? (item.total / maxTotal) * 100 : 0;
+          
+          return (
+            <div key={index} className="chart-bar-container">
+              <div className="chart-label">{item.month}</div>
+              <div className="chart-bar-wrapper">
+                <div 
+                  className="chart-bar" 
+                  style={{ width: `${percentage}%` }}
+                >
+                  <span className="chart-value">{formatCurrency(item.total)}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
+
+export default ChartMonthly;

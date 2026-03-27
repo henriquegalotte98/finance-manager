@@ -1,38 +1,88 @@
 import { useEffect, useState } from "react";
-import  api  from "../services/api";
+import api from "../services/api";
+import "./Alerts.css";
 
-export default function Alerts() {
+function Alerts() {
   const [alerts, setAlerts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    console.log("Chamando: /dashboard/alerts");
+    const fetchAlerts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log("Chamando: /dashboard/alerts");
+        
+        const response = await api.get("/dashboard/alerts");
+        
+        // Garantir que alerts seja um array
+        const data = response.data;
+        setAlerts(Array.isArray(data) ? data : []);
+        
+      } catch (err) {
+        console.error("Erro ao buscar alertas:", err);
+        setError("Erro ao carregar alertas");
+        setAlerts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    api
-      .get("/dashboard/alerts")
-      .then((res) => {
-        setAlerts(res.data);
-      })
-      .catch((err) => {
-        console.error("Erro ao buscar alerts:", err);
-      });
+    fetchAlerts();
   }, []);
 
-  if (!Array.isArray(alerts)) return null;
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL"
+    }).format(value);
+  };
 
-  if (!alerts.length) {
-    return <p>Nenhuma conta vencendo</p>;
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("pt-BR");
+  };
+
+  if (loading) {
+    return (
+      <div className="alerts-container">
+        <h3>⚠️ Alertas</h3>
+        <div className="loading">Carregando alertas...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="alerts-container">
+        <h3>⚠️ Alertas</h3>
+        <div className="error">{error}</div>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <h3>⚠ Contas vencendo</h3>
-      <ul>
-        {alerts.map((alert, i) => (
-          <li key={i}>
-            {alert.service} - R$ {alert.amount}
-          </li>
-        ))}
-      </ul>
+    <div className="alerts-container">
+      <h3>⚠️ Alertas</h3>
+      
+      {alerts.length === 0 ? (
+        <div className="no-alerts">
+          ✅ Nenhum vencimento nos próximos 7 dias
+        </div>
+      ) : (
+        <div className="alerts-list">
+          {alerts.map((alert, index) => (
+            <div key={index} className="alert-item">
+              <div className="alert-service">{alert.service}</div>
+              <div className="alert-amount">{formatCurrency(alert.amount)}</div>
+              <div className="alert-date">Vence: {formatDate(alert.duedate)}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
+
+export default Alerts;
