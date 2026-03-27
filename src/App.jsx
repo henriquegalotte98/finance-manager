@@ -10,6 +10,8 @@ function App() {
         <Sidebar />
 
         <main className="layout-content">
+          {/* Temporário: adicione isso para debug */}
+          {import.meta.env.DEV && <ApiTester />}
           <AppRoutes />
         </main>
       </div>
