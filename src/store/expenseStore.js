@@ -82,7 +82,9 @@ export const useExpenseStore = create((set, get) => ({
       });
 
       if (!response.ok) {
-        throw new Error("Erro ao salvar despesa");
+        const errorText = await response.text();
+        console.error("ERRO BACKEND:", errorText);
+        throw new Error(errorText);
       }
 
       get().resetForm();
