@@ -105,7 +105,7 @@ export const useExpenseStore = create((set, get) => ({
         console.error("ERRO BACKEND:", errorText);
         throw new Error(errorText);
       }
-
+      console.log("SALVO COM SUCESSO");
       get().resetForm();
 
       await get().loadMonth(API_URL);
@@ -121,7 +121,7 @@ export const useExpenseStore = create((set, get) => ({
   // ================= LOAD MONTH =================
   loadMonth: async (API_URL) => {
     const { selectedYear, selectedMonth } = get();
-
+    console.log("LOAD MONTH RESPONSE:", data);
     // 🔥 BLOQUEIA chamada inválida
     if (!API_URL || !selectedYear || !selectedMonth) return;
 
@@ -144,9 +144,7 @@ export const useExpenseStore = create((set, get) => ({
       const data = await response.json();
 
       // 🔥 CORREÇÃO CRÍTICA (antes estava errado)
-      set({
-        expenses: Array.isArray(data) ? data : []
-      });
+      set({ expenses: Array.isArray(data) ? data : [] });
 
     } catch (error) {
       console.error("Erro ao carregar mês:", error);
