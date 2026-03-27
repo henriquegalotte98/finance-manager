@@ -27,10 +27,10 @@ function Excel({ activeApp }) {
   } = useExpenseStore()
 
   useEffect(() => {
-    if (!API_URL) return
-    loadMonth(API_URL)
-  }, [selectedMonth, selectedYear, API_URL])
+    if (!API_URL || !selectedMonth || !selectedYear) return;
 
+    loadMonth(API_URL);
+  }, [selectedMonth, selectedYear, API_URL]);
   const formatCurrency = (value) =>
     Number(value).toLocaleString("pt-BR", {
       style: "currency",

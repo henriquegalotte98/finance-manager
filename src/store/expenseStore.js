@@ -1,9 +1,46 @@
-import { create } from "zustand"
-import api from "../services/api"
+import { create } from "zustand";
+import api from "../services/api";
 
 export const useExpenseStore = create((set, get) => ({
-  // ... outros estados
+  // ================= STATE =================
+  service: "",
+  price: "",
+  dueDate: "",
+  paymentMethod: "credit_card",
+  numberTimes: 1,
+  recurrence: "none",
+  editId: null,
 
+  loading: false,
+
+  // 🔥 CORREÇÃO CRÍTICA
+  expenses: [],
+
+  // 🔥 CORREÇÃO CRÍTICA
+  selectedMonth: new Date().getMonth() + 1,
+  selectedYear: new Date().getFullYear(),
+
+  // ================= ACTIONS =================
+
+  // 🔥 ESSENCIAL (corrige erro Q is not a function)
+  setField: (field, value) =>
+    set((state) => ({
+      ...state,
+      [field]: value
+    })),
+
+  resetForm: () =>
+    set({
+      service: "",
+      price: "",
+      dueDate: "",
+      paymentMethod: "credit_card",
+      numberTimes: 1,
+      recurrence: "none",
+      editId: null
+    }),
+
+  // ================= ADD / EDIT =================
   addExpense: async (API_URL) => {
     const {
       service,
@@ -12,11 +49,7 @@ export const useExpenseStore = create((set, get) => ({
       paymentMethod,
       numberTimes,
       recurrence,
-      editId,
-      resetForm,
-      loadMonth,
-      selectedMonth,
-      selectedYear
+      editId
     } = get();
 
     set({ loading: true });
@@ -43,7 +76,7 @@ export const useExpenseStore = create((set, get) => ({
         method,
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
+          Authorization: `Bearer ${localStorage.getItem("token")}`
         },
         body: JSON.stringify(expenseData)
       });
@@ -52,10 +85,8 @@ export const useExpenseStore = create((set, get) => ({
         throw new Error("Erro ao salvar despesa");
       }
 
-      // Resetar o formulário
-      resetForm();
+      get().resetForm();
 
-      // Recarregar as despesas do mês atual
       await get().loadMonth(API_URL);
 
     } catch (error) {
@@ -66,8 +97,12 @@ export const useExpenseStore = create((set, get) => ({
     }
   },
 
+  // ================= LOAD MONTH =================
   loadMonth: async (API_URL) => {
     const { selectedYear, selectedMonth } = get();
+
+    // 🔥 BLOQUEIA chamada inválida
+    if (!API_URL || !selectedYear || !selectedMonth) return;
 
     set({ loading: true });
 
@@ -76,7 +111,7 @@ export const useExpenseStore = create((set, get) => ({
         `${API_URL}/expenses/month/${selectedYear}/${selectedMonth}`,
         {
           headers: {
-            "Authorization": `Bearer ${localStorage.getItem("token")}`
+            Authorization: `Bearer ${localStorage.getItem("token")}`
           }
         }
       );
@@ -86,16 +121,22 @@ export const useExpenseStore = create((set, get) => ({
       }
 
       const data = await response.json();
-      set({ expenses: Array.isArray(response.data) ? response.data : [] });
+
+      // 🔥 CORREÇÃO CRÍTICA (antes estava errado)
+      set({
+        expenses: Array.isArray(data) ? data : []
+      });
 
     } catch (error) {
       console.error("Erro ao carregar mês:", error);
+
       set({ expenses: [] });
     } finally {
       set({ loading: false });
     }
   },
 
+  // ================= DELETE =================
   removeExpense: async (API_URL, expenseId) => {
     if (!window.confirm("Tem certeza que deseja excluir esta despesa e todas as suas parcelas?")) {
       return;
@@ -105,7 +146,7 @@ export const useExpenseStore = create((set, get) => ({
       const response = await fetch(`${API_URL}/expenses/${expenseId}`, {
         method: "DELETE",
         headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
+          Authorization: `Bearer ${localStorage.getItem("token")}`
         }
       });
 
@@ -113,7 +154,6 @@ export const useExpenseStore = create((set, get) => ({
         throw new Error("Erro ao deletar despesa");
       }
 
-      // Recarregar as despesas do mês atual
       await get().loadMonth(API_URL);
 
     } catch (error) {
