@@ -1,33 +1,58 @@
-import Calendar from "react-calendar"
-import { useEffect,useState } from "react"
+import { useEffect, useState } from "react";
+import api from "../services/api";
+import "./CalendarBills.css";
 
-import api from "../services/api"
+function CalendarBills() {
+  const [bills, setBills] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-export default function CalendarBills({API_URL}){
+  useEffect(() => {
+    let isMounted = true;
+    
+    const fetchBills = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get("/expenses/month/2026/3");
+        
+        let data = [];
+        if (response && response.data && Array.isArray(response.data)) {
+          data = response.data;
+        }
+        
+        if (isMounted) {
+          setBills(data);
+        }
+      } catch (err) {
+        console.error("Erro ao buscar contas:", err);
+        if (isMounted) {
+          setError("Erro ao carregar calendário");
+          setBills([]);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+    
+    fetchBills();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
-const [bills,setBills] = useState([])
+  if (loading) return <div>Carregando calendário...</div>;
+  if (error) return <div className="error">{error}</div>;
+  if (!bills || bills.length === 0) return <div>Nenhuma conta para este mês</div>;
 
-useEffect(()=>{
-
-api.get(`${API_URL}/dashboard/calendar`)
-.then(res=> setBills(res.data))
-
-},[])
-
-function tileContent({date}){
-
-const dayBills = bills.filter(b=>{
-
-return new Date(b.duedate).toDateString() === date.toDateString()
-
-})
-
-if(dayBills.length === 0) return null
-
-return <span style={{color:"red"}}>●</span>
-
+  return (
+    <div className="calendar-bills">
+      <h3>📅 Calendário de Contas</h3>
+      {/* Seu conteúdo do calendário aqui */}
+    </div>
+  );
 }
 
-return <Calendar tileContent={tileContent}/>
-
-}
+export default CalendarBills;

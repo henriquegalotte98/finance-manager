@@ -13,8 +13,14 @@ function Dashboard() {
   const year = new Date().getFullYear();
 
   useEffect(() => {
+    let isMounted = true; // Prevenir memory leaks
+    
     const fetchMonthTotal = async () => {
       try {
+        if (!api) {
+          throw new Error("API não configurada");
+        }
+        
         setLoading(true);
         setError(null);
         
@@ -23,22 +29,33 @@ function Dashboard() {
         const response = await api.get(`/dashboard/month-total/${year}/${month}`);
         
         // Verificação segura
-        const total = response?.data?.total;
-        setMonthTotal(typeof total === 'number' ? total : 0);
+        if (isMounted) {
+          const total = response?.data?.total;
+          setMonthTotal(typeof total === 'number' ? total : 0);
+        }
         
       } catch (err) {
         console.error("Erro ao buscar total:", err);
-        setError("Erro ao carregar total do mês");
-        setMonthTotal(0);
+        if (isMounted) {
+          setError("Erro ao carregar total do mês");
+          setMonthTotal(0);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchMonthTotal();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [year, month]);
 
   const formatCurrency = (value) => {
+    if (typeof value !== 'number') return 'R$ 0,00';
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL"

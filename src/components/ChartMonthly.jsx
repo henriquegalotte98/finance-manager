@@ -8,8 +8,14 @@ function ChartMonthly() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchMonthlyData = async () => {
       try {
+        if (!api) {
+          throw new Error("API não configurada");
+        }
+        
         setLoading(true);
         setError(null);
         
@@ -17,74 +23,87 @@ function ChartMonthly() {
         
         const response = await api.get("/dashboard/monthly");
         
-        // Verificação crítica: garantir que seja array
+        // Verificação EXTREMA de segurança
         let data = [];
+        
         if (response && response.data) {
-          data = Array.isArray(response.data) ? response.data : [];
+          if (Array.isArray(response.data)) {
+            data = response.data;
+          } else if (typeof response.data === 'object') {
+            // Se for um objeto, tenta converter
+            data = Object.values(response.data).filter(item => item !== null);
+          }
         }
         
-        setMonthlyData(data);
+        // Garantir que cada item tem as propriedades necessárias
+        data = data.map(item => ({
+          month: item?.month || "Mês",
+          total: typeof item?.total === 'number' ? item.total : 0
+        }));
+        
+        if (isMounted) {
+          setMonthlyData(data);
+        }
         
       } catch (err) {
         console.error("Erro ao buscar dados mensais:", err);
-        setError("Erro ao carregar gráfico");
-        setMonthlyData([]);
+        if (isMounted) {
+          setError("Erro ao carregar gráfico");
+          setMonthlyData([]);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchMonthlyData();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const formatCurrency = (value) => {
+    if (typeof value !== 'number') return 'R$ 0,00';
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL"
     }).format(value);
   };
 
-  if (loading) {
-    return (
-      <div className="chart-container">
-        <h3>📈 Gastos por Mês</h3>
+  // Renderização segura
+  const renderChart = () => {
+    if (loading) {
+      return (
         <div className="loading">Carregando dados...</div>
-      </div>
-    );
-  }
+      );
+    }
 
-  if (error) {
-    return (
-      <div className="chart-container">
-        <h3>📈 Gastos por Mês</h3>
+    if (error) {
+      return (
         <div className="error">{error}</div>
-      </div>
-    );
-  }
+      );
+    }
 
-  if (!monthlyData || monthlyData.length === 0) {
-    return (
-      <div className="chart-container">
-        <h3>📈 Gastos por Mês</h3>
+    if (!monthlyData || monthlyData.length === 0) {
+      return (
         <div className="no-data">Nenhum dado disponível</div>
-      </div>
-    );
-  }
+      );
+    }
 
-  // Calcular valor máximo para as barras
-  const maxTotal = Math.max(...monthlyData.map(item => Number(item.total) || 0));
+    // Calcular valor máximo para as barras
+    const maxTotal = Math.max(...monthlyData.map(item => item.total || 0), 0.01);
 
-  return (
-    <div className="chart-container">
-      <h3>📈 Gastos por Mês</h3>
-      
+    return (
       <div className="monthly-chart">
         {monthlyData.map((item, index) => {
           const total = Number(item.total) || 0;
           const percentage = maxTotal > 0 ? (total / maxTotal) * 100 : 0;
           
           return (
-            <div key={index} className="chart-bar-container">
+            <div key={`chart-${index}`} className="chart-bar-container">
               <div className="chart-label">
                 {item.month || `Mês ${index + 1}`}
               </div>
@@ -100,6 +119,13 @@ function ChartMonthly() {
           );
         })}
       </div>
+    );
+  };
+
+  return (
+    <div className="chart-container">
+      <h3>📈 Gastos por Mês</h3>
+      {renderChart()}
     </div>
   );
 }
