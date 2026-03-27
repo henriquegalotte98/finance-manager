@@ -9,7 +9,7 @@ import PrivateLayout from "./components/PrivateLayout";
 import Market from "./components/Market";
 import Travel from "./components/Travel";
 import Profile from "./components/Profile";
-import Economy from "./components/Economias";
+import Economias from "./components/Economias";
 function AppRoutes() {
   return (
     <Routes>
@@ -27,7 +27,7 @@ function AppRoutes() {
           <Route path="/app" element={<Navigate to="/app/dashboard" />} />
           <Route path="/app/dashboard" element={<Dashboard />} />
           <Route path="/app/excel" element={<Excel />} />
-          <Route path="/app/economy" element={<Economy />} />
+          <Route path="/app/economias" element={<Economias/>} />
         </Route>
       </Route>
 
