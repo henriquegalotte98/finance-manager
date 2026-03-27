@@ -183,17 +183,14 @@ app.post("/upload", upload.single("file"), async (req, res) => {
 
 // ================= EXPENSES =================
 function generateDate(baseDate, recurrence, index) {
-  let d = new Date(dueDate);
+  let d = new Date(baseDate);
   d.setHours(12, 0, 0, 0);
 
   if (recurrence === "monthly") {
-    // Para recorrência mensal, adiciona 1 mês para cada índice
     d.setMonth(d.getMonth() + index);
   } else if (recurrence === "weekly") {
-    // Para recorrência semanal, adiciona 7 dias para cada índice
     d.setDate(d.getDate() + (7 * index));
   } else if (recurrence === "yearly") {
-    // Para recorrência anual, adiciona 1 ano para cada índice
     d.setFullYear(d.getFullYear() + index);
   }
 
@@ -253,52 +250,66 @@ app.post("/expenses", async (req, res) => {
   try {
     const { service, price, paymentMethod, numberTimes, dueDate, recurrence } = req.body;
 
-    const numTimes = parseInt(numberTimes || 1);
+    console.log("BODY:", req.body);
+
+    // ✅ validações básicas
+    if (!service || !price || !dueDate) {
+      return res.status(400).json({ error: "Dados incompletos" });
+    }
+
+    const parsedPrice = Number(price);
+    const numTimes = Number(numberTimes) || 1;
     const isRecurring = recurrence !== "none";
 
-    // Se for recorrência (mensal, semanal, anual), o número de parcelas é definido pela função totalInstallments
-    // Se for compra parcelada (cartão/crediário), usa o numberTimes informado
     let totalInstallmentsCount;
+
     if (isRecurring) {
       totalInstallmentsCount = totalInstallments(numTimes, recurrence);
     } else {
       totalInstallmentsCount = numTimes;
     }
 
-    // Valor por parcela
-    const installmentAmount = price / totalInstallmentsCount;
+    // ✅ proteção contra NaN
+    if (!totalInstallmentsCount || isNaN(totalInstallmentsCount)) {
+      return res.status(400).json({ error: "Número de parcelas inválido" });
+    }
 
-    // 1. Cria a despesa
+    if (!parsedPrice || isNaN(parsedPrice)) {
+      return res.status(400).json({ error: "Preço inválido" });
+    }
+
+    console.log("TOTAL PARCELAS:", totalInstallmentsCount);
+
+    const installmentAmount = parsedPrice / totalInstallmentsCount;
+
+    // 1️⃣ cria expense
     const expense = await pool.query(
       `INSERT INTO expenses 
        (service, price, paymentmethod, numbertimes, recurrence)
        VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-      [service, price, paymentMethod, totalInstallmentsCount, recurrence]
+      [service, parsedPrice, paymentMethod, totalInstallmentsCount, recurrence]
     );
 
     const expenseId = expense.rows[0].id;
 
-    // 2. Cria as parcelas
+    // 2️⃣ cria parcelas
     for (let i = 0; i < totalInstallmentsCount; i++) {
       let vencimento;
 
       if (isRecurring) {
-        // Para recorrência, gera datas espaçadas (mensal, semanal, anual)
         vencimento = generateDate(dueDate, recurrence, i);
       } else {
-        // Para parcelas fixas, usa a mesma data base ou adiciona 1 mês para cartão/crediário
         if (paymentMethod === "credit_card" || paymentMethod === "credit_store") {
-          // Parcelas de cartão/crediário geralmente vencem 30 dias após a compra, com parcelas mensais
           let d = new Date(dueDate);
           d.setHours(12, 0, 0, 0);
           d.setMonth(d.getMonth() + i);
           vencimento = d;
         } else {
-          // Pagamento único, todas as "parcelas" (se houver mais de 1) vencem na mesma data
-          // Isso é raro, mas mantido para consistência
-          vencimento = new Date(dueDate + "T00:00:00");
+          vencimento = new Date(dueDate);
         }
       }
+
+      console.log("PARCELA:", i + 1, "DATA:", vencimento);
 
       await pool.query(
         `INSERT INTO installments 
