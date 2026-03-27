@@ -1,12 +1,15 @@
 .dashboard {
   padding: 20px;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
+  background: #f5f5f5;
+  min-height: 100vh;
 }
 
 .dashboard h1 {
-  color: #333;
+  color: #2c3e50;
   margin-bottom: 30px;
+  font-size: 28px;
 }
 
 .dashboard_cards {
@@ -19,9 +22,9 @@
 .dashboard_card {
   background: white;
   border-radius: 12px;
-  padding: 20px;
+  padding: 25px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  transition: transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .dashboard_card:hover {
@@ -30,29 +33,44 @@
 }
 
 .dashboard_card h3 {
-  color: #666;
+  color: #7f8c8d;
   font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 10px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .total-value {
   color: #2c3e50;
-  font-size: 28px;
+  font-size: 32px;
   font-weight: bold;
   margin: 0;
 }
 
 .dashboard_grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
   gap: 20px;
+}
+
+.dashboard_card_wrapper {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+.dashboard_card_wrapper:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .loading-spinner {
   text-align: center;
   padding: 20px;
-  color: #666;
+  color: #95a5a6;
 }
 
 .error-message {
@@ -61,4 +79,19 @@
   padding: 10px;
   background: #fde8e8;
   border-radius: 6px;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 10px;
+  }
+  
+  .dashboard_grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .total-value {
+    font-size: 24px;
+  }
 }

@@ -17,9 +17,13 @@ function ChartMonthly() {
         
         const response = await api.get("/dashboard/monthly");
         
-        // Garantir que monthlyData seja um array
-        const data = response.data;
-        setMonthlyData(Array.isArray(data) ? data : []);
+        // Verificação crítica: garantir que seja array
+        let data = [];
+        if (response && response.data) {
+          data = Array.isArray(response.data) ? response.data : [];
+        }
+        
+        setMonthlyData(data);
         
       } catch (err) {
         console.error("Erro ao buscar dados mensais:", err);
@@ -58,7 +62,7 @@ function ChartMonthly() {
     );
   }
 
-  if (monthlyData.length === 0) {
+  if (!monthlyData || monthlyData.length === 0) {
     return (
       <div className="chart-container">
         <h3>📈 Gastos por Mês</h3>
@@ -67,8 +71,8 @@ function ChartMonthly() {
     );
   }
 
-  // Encontrar o valor máximo para calcular a largura das barras
-  const maxTotal = Math.max(...monthlyData.map(item => item.total || 0));
+  // Calcular valor máximo para as barras
+  const maxTotal = Math.max(...monthlyData.map(item => Number(item.total) || 0));
 
   return (
     <div className="chart-container">
@@ -76,17 +80,20 @@ function ChartMonthly() {
       
       <div className="monthly-chart">
         {monthlyData.map((item, index) => {
-          const percentage = maxTotal > 0 ? (item.total / maxTotal) * 100 : 0;
+          const total = Number(item.total) || 0;
+          const percentage = maxTotal > 0 ? (total / maxTotal) * 100 : 0;
           
           return (
             <div key={index} className="chart-bar-container">
-              <div className="chart-label">{item.month}</div>
+              <div className="chart-label">
+                {item.month || `Mês ${index + 1}`}
+              </div>
               <div className="chart-bar-wrapper">
                 <div 
                   className="chart-bar" 
-                  style={{ width: `${percentage}%` }}
+                  style={{ width: `${Math.max(percentage, 5)}%` }}
                 >
-                  <span className="chart-value">{formatCurrency(item.total)}</span>
+                  <span className="chart-value">{formatCurrency(total)}</span>
                 </div>
               </div>
             </div>

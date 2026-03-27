@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../services/api";
 import ChartMonthly from "../components/ChartMonthly";
 import Alerts from "../components/Alerts";
-import CalendarBills from "../components/CalendarBills";
-import "./Dashboard.css"; // Adicione se tiver CSS
+import "./Dashboard.css";
 
 function Dashboard() {
   const [monthTotal, setMonthTotal] = useState(0);
@@ -23,9 +22,9 @@ function Dashboard() {
         
         const response = await api.get(`/dashboard/month-total/${year}/${month}`);
         
-        // Garantir que o total seja um número
-        const total = response.data?.total ?? 0;
-        setMonthTotal(total);
+        // Verificação segura
+        const total = response?.data?.total;
+        setMonthTotal(typeof total === 'number' ? total : 0);
         
       } catch (err) {
         console.error("Erro ao buscar total:", err);
@@ -64,11 +63,11 @@ function Dashboard() {
       </div>
 
       <div className="dashboard_grid">
-        <div className="dashboard_card">
+        <div className="dashboard_card_wrapper">
           <ChartMonthly />
         </div>
 
-        <div className="dashboard_card">
+        <div className="dashboard_card_wrapper">
           <Alerts />
         </div>
       </div>

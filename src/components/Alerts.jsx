@@ -17,9 +17,13 @@ function Alerts() {
         
         const response = await api.get("/dashboard/alerts");
         
-        // Garantir que alerts seja um array
-        const data = response.data;
-        setAlerts(Array.isArray(data) ? data : []);
+        // Verificação crítica: garantir que seja array
+        let data = [];
+        if (response && response.data) {
+          data = Array.isArray(response.data) ? response.data : [];
+        }
+        
+        setAlerts(data);
         
       } catch (err) {
         console.error("Erro ao buscar alertas:", err);
@@ -41,13 +45,18 @@ function Alerts() {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("pt-BR");
+    if (!dateString) return "Data não disponível";
+    try {
+      return new Date(dateString).toLocaleDateString("pt-BR");
+    } catch {
+      return "Data inválida";
+    }
   };
 
   if (loading) {
     return (
       <div className="alerts-container">
-        <h3>⚠️ Alertas</h3>
+        <h3>⚠️ Alertas de Vencimento</h3>
         <div className="loading">Carregando alertas...</div>
       </div>
     );
@@ -56,7 +65,7 @@ function Alerts() {
   if (error) {
     return (
       <div className="alerts-container">
-        <h3>⚠️ Alertas</h3>
+        <h3>⚠️ Alertas de Vencimento</h3>
         <div className="error">{error}</div>
       </div>
     );
@@ -64,9 +73,9 @@ function Alerts() {
 
   return (
     <div className="alerts-container">
-      <h3>⚠️ Alertas</h3>
+      <h3>⚠️ Alertas de Vencimento</h3>
       
-      {alerts.length === 0 ? (
+      {!alerts || alerts.length === 0 ? (
         <div className="no-alerts">
           ✅ Nenhum vencimento nos próximos 7 dias
         </div>
@@ -74,9 +83,15 @@ function Alerts() {
         <div className="alerts-list">
           {alerts.map((alert, index) => (
             <div key={index} className="alert-item">
-              <div className="alert-service">{alert.service}</div>
-              <div className="alert-amount">{formatCurrency(alert.amount)}</div>
-              <div className="alert-date">Vence: {formatDate(alert.duedate)}</div>
+              <div className="alert-service">
+                <strong>{alert.service || "Serviço não informado"}</strong>
+              </div>
+              <div className="alert-amount">
+                {formatCurrency(alert.amount || 0)}
+              </div>
+              <div className="alert-date">
+                Vence: {formatDate(alert.duedate)}
+              </div>
             </div>
           ))}
         </div>
