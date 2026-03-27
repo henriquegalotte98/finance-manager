@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
-import Excel from "./pages/Excel";
+import Excel from "./components/Excel";
 
 import PrivateRoute from "./components/PrivateRoute";
 import PrivateLayout from "./components/PrivateLayout";
