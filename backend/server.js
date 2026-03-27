@@ -208,6 +208,29 @@ function totalInstallments(numTimes, recurrence) {
   return numTimes;
 }
 
+app.put("/expenses/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { service, price, paymentMethod, numberTimes, dueDate, recurrence } = req.body;
+
+    const result = await pool.query(
+      `UPDATE expenses
+       SET service=$1, price=$2, paymentmethod=$3, numbertimes=$4, recurrence=$5
+       WHERE id=$6 RETURNING *`,
+      [service, price, paymentMethod, numberTimes, recurrence, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Despesa não encontrada" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("🔥 ERRO PUT:", err);
+    res.status(500).send("Erro ao atualizar despesa");
+  }
+});
+
 app.post("/expenses", async (req, res) => {
   try {
     const { service, price, paymentMethod, numberTimes, dueDate, recurrence } = req.body;
