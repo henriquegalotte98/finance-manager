@@ -3,7 +3,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Excel from "./components/Excel";
-
+import { Navigate } from "react-router-dom";
 import PrivateRoute from "./components/PrivateRoute";
 import PrivateLayout from "./components/PrivateLayout";
 
