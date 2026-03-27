@@ -59,7 +59,7 @@ export const useExpenseStore = create((set, get) => ({
         service,
         price: parseFloat(price),
         paymentMethod,
-        numberTimes: parseInt(numberTimes),
+        numberTimes: parseInt(numberTimes) || 1,
         dueDate,
         recurrence: recurrence || "none"
       };
@@ -70,6 +70,25 @@ export const useExpenseStore = create((set, get) => ({
       if (editId) {
         url = `${API_URL}/expenses/${editId}`;
         method = "PUT";
+      }
+
+      console.log("ENVIANDO:", {
+        service,
+        price,
+        paymentMethod,
+        numberTimes,
+        dueDate,
+        recurrence
+      });
+
+      if (!service || !price || !dueDate) {
+        alert("Preencha todos os campos obrigatórios");
+        return;
+      }
+
+      if (isNaN(parseFloat(price))) {
+        alert("Preço inválido");
+        return;
       }
 
       const response = await fetch(url, {
