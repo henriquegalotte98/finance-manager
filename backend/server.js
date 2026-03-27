@@ -230,7 +230,7 @@ app.post("/expenses", async (req, res) => {
 
     // ✅ 3. cria parcelas usando o ID
     for (let i = 0; i < total; i++) {
-      const vencimento = new Date(dueDate + "T00:00:00");
+      const vencimento = generateDate(dueDate, recurrence, i);
 
       await pool.query(
         `INSERT INTO installments 
