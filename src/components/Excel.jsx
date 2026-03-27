@@ -152,7 +152,9 @@ function Excel({ activeApp }) {
           onClick={() => addExpense(API_URL)}
           className="eco-btn eco-btn-primary"
           disabled={loading}
-        >
+          
+          >
+          {console.log("API_URL:", API_URL)}
           {loading ? "Salvando..." : editId ? "Salvar edição" : "Adicionar"}
         </button>
 
