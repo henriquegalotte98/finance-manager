@@ -57,7 +57,7 @@ app.use(bodyParser.json());
 
 
 // ================= ROUTES =================
-//app.use("/expenses", expensesRoutes);
+app.use("/expenses", expensesRoutes);
 app.use("/couple", coupleRoutes);
 app.use("/auth", authRoutes);
 app.use("/features", featureRoutes);
