@@ -317,8 +317,6 @@ app.post("/expenses", async (req, res) => {
 });
 
 app.get("/expenses/month/:year/:month", async (req, res) => {
-  console.log("ROTA MONTH CHAMADA"); // 👈 adiciona isso
-
   try {
     const { year, month } = req.params;
 
@@ -336,11 +334,13 @@ app.get("/expenses/month/:year/:month", async (req, res) => {
         e.id as expense_id
        FROM installments i
        JOIN expenses e ON e.id = i.expense_id
-       WHERE EXTRACT(YEAR FROM i.duedate) = $1
-       AND EXTRACT(MONTH FROM i.duedate) = $2
+       WHERE i.duedate >= DATE_TRUNC('month', TO_DATE($1 || '-' || $2 || '-01', 'YYYY-MM-DD'))
+       AND i.duedate < DATE_TRUNC('month', TO_DATE($1 || '-' || $2 || '-01', 'YYYY-MM-DD')) + INTERVAL '1 month'
        ORDER BY i.duedate`,
-      [parseInt(year), parseInt(month)]
+      [year, month]
     );
+
+    console.log("RESULT:", result.rows);
 
     res.json(result.rows);
 
