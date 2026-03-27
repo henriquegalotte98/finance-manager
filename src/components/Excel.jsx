@@ -182,14 +182,14 @@ function Excel({ activeApp }) {
                   ⏳ Carregando despesas...
                 </td>
               </tr>
-            ) : expenses.length === 0 ? (
+            ) : !expenses || expenses.length === 0 ? (
               <tr>
                 <td colSpan="6" style={{ textAlign: "center" }}>
                   Nenhum gasto neste mês
                 </td>
               </tr>
             ) : (
-              expenses.map((exp) => (
+              (expenses || []).map((exp) => (
                 <tr className="expenses_body line_bottom" key={exp.id}>
                   <td className="label_service">{exp.service} <div className="eco-tag-installments eco-tag-shared-installments">{exp.installment_number} de {exp.numbertimes}</div> </td>
                   <td>{formatCurrency(exp.amount)}</td>
