@@ -339,7 +339,7 @@ app.get("/expenses/month/:year/:month", async (req, res) => {
        WHERE EXTRACT(YEAR FROM i.duedate) = $1
        AND EXTRACT(MONTH FROM i.duedate) = $2
        ORDER BY i.duedate`,
-      [year, month]
+      [parseInt(year), parseInt(month)]
     );
 
     res.json(result.rows);
@@ -383,7 +383,7 @@ app.get("/dashboard/month-total/:year/:month", async (req, res) => {
      FROM installments
      WHERE EXTRACT(YEAR FROM duedate)=$1
      AND EXTRACT(MONTH FROM duedate)=$2`,
-    [year, month]
+    [parseInt(year), parseInt(month)]
   );
 
   res.json(result.rows[0]);

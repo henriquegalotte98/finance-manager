@@ -52,7 +52,7 @@ function Dashboard() {
     return () => {
       isMounted = false;
     };
-  }, [year, month]);
+  }, [parseInt(year), parseInt(month)]);
 
   const formatCurrency = (value) => {
     if (typeof value !== 'number') return 'R$ 0,00';
