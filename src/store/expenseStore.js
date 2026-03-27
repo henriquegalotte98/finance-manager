@@ -121,8 +121,7 @@ export const useExpenseStore = create((set, get) => ({
   // ================= LOAD MONTH =================
   loadMonth: async (API_URL) => {
     const { selectedYear, selectedMonth } = get();
-    console.log("LOAD MONTH RESPONSE:", data);
-    // 🔥 BLOQUEIA chamada inválida
+
     if (!API_URL || !selectedYear || !selectedMonth) return;
 
     set({ loading: true });
@@ -138,13 +137,18 @@ export const useExpenseStore = create((set, get) => ({
       );
 
       if (!response.ok) {
-        throw new Error("Erro ao carregar despesas");
+        const errorText = await response.text();
+        console.error("ERRO BACKEND:", errorText);
+        throw new Error(errorText);
       }
 
-      const data = await response.json();
+      const data = await response.json(); // 🔥 ESSENCIAL
 
-      // 🔥 CORREÇÃO CRÍTICA (antes estava errado)
-      set({ expenses: Array.isArray(data) ? data : [] });
+      console.log("DADOS DO MÊS:", data);
+
+      set({
+        expenses: Array.isArray(data) ? data : []
+      });
 
     } catch (error) {
       console.error("Erro ao carregar mês:", error);
