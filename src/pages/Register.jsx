@@ -56,6 +56,12 @@ function Register() {
       setLoading(false);
     }
   };
+  
+
+  const handleClick = () => {
+    navigate("/app");
+  };
+
 
   return (
     <div className="register-container">
@@ -127,7 +133,8 @@ function Register() {
         </form>
         
         <div className="login-link">
-          Já tem uma conta? <Link to="/login">Faça login</Link>
+          Já tem uma conta? <button className="go_login" onClick={handleClick}>Ir para login</button>
+
         </div>
       </div>
     </div>

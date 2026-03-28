@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import "./Sidebar.css";
 import { useAuth } from "./AuthContext";
+import duofinanceLogo from '../assets/duofinance-logo.png';
 
 export default function Sidebar() {
   const { user } = useAuth(); // pega user do contexto
@@ -8,7 +9,7 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <h2 className="sidebar-logo">Finance</h2>
+      <h2 className="sidebar-logo"><img src={duofinanceLogo} alt="" /></h2>
 
       <nav className="sidebar-nav">
         <NavLink to="/app" end className="sidebar-link">

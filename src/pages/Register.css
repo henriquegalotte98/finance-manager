@@ -1,13 +1,25 @@
 /* src/pages/Register.css */
 
+body {
+  background: radial-gradient(1200px 600px at 10% -10%, rgba(99, 102, 241, 0.35), transparent), radial-gradient(900px 500px at 90% 0%, rgba(16, 185, 129, 0.22), transparent), linear-gradient(160deg, #0f172a 0%, #1e293b 45%, #0b1224 100%);
+}
+
+
+
 /* Container principal */
 .register-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: transparent;
   padding: 20px;
+}
+
+.register-button {
+
+  width: 100px;
+
 }
 
 /* Card do formulário */
@@ -130,6 +142,7 @@
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -141,18 +154,50 @@
   .register-card {
     padding: 30px 20px;
   }
-  
+
   .register-title {
     font-size: 24px;
   }
-  
+
   .form-input {
     padding: 10px;
     font-size: 14px;
   }
-  
+
   .register-button {
     padding: 10px;
     font-size: 14px;
   }
+}
+
+button[type="submit"] {
+
+  padding: 10px;
+  width: 100px;
+  border: none;
+  border-radius: 10px;
+  background: #1FCDFF;
+  color: #333333;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button[type="submit"]:hover {
+  width: 110px;
+
+}
+
+
+.go_login {
+  border: none;
+  background: transparent;
+
+}
+
+.go_login:hover {
+  text-decoration: underline;
+  color: #c33;
+  cursor: pointer;
+
 }
