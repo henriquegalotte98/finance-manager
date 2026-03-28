@@ -3,6 +3,7 @@ import ImportFile from "./ImportFile";
 import LogoutButton from "./LogoutButton";
 import api from "../services/api";
 import { useAuth } from '../components/AuthContext';
+import DarkModeToggle from "./DarkModeToggle";
 
 function Profile() {
   const { user } = useAuth(); // Pegando o usuário do contexto de autenticação
@@ -115,7 +116,7 @@ const onToggleLiving = async (event) => {
       
       <ImportFile />
       <LogoutButton />
-
+      <DarkModeToggle />
       <section style={{ marginTop: "20px" }}>
         <h3>Casal</h3>
         <p>

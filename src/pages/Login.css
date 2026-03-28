@@ -4,6 +4,49 @@
     box-sizing: border-box;
 }
 
+/* ================ VARIÁVEIS DE TEMA ================ */
+:root {
+    /* Cores do tema claro */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f0f0f0;
+    --text-primary: #333333;
+    --text-secondary: #666;
+    --card-bg: #FFFFFF;
+    --border-color: #000000;
+    --accent-color: #1FCDFF;
+    --accent-hover: #1FCDFF;
+    --input-bg: #fff;
+    --shadow-color: #000;
+    --link-color: #1FCDFF;
+    --register-text: #fff;
+}
+
+body.dark-mode {
+    /* Cores do tema escuro */
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --card-bg: #2d2d2d;
+    --border-color: #1FCDFF;
+    --accent-color: #1FCDFF;
+    --accent-hover: #4dd8ff;
+    --input-bg: #3d3d3d;
+    --shadow-color: #1FCDFF;
+    --link-color: #4dd8ff;
+    --register-text: #ffffff;
+}
+
+/* Transição suave para todas as cores */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
 /* ---------------- ANIMAÇÃO LOGO ---------------- */
 
 @keyframes animation {
@@ -45,6 +88,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    background-color: var(--bg-primary);
 }
 
 .card_login {
@@ -56,19 +100,20 @@
     width: 356px;
     padding: 20px;
 
-    background: #FFFFFF;
+    background: var(--card-bg);
     border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .card_login h2 {
     margin-bottom: 40px;
-    color: #333333;
+    color: var(--text-primary);
 }
 
 /* ---------------- LINKS ---------------- */
 
 a {
-    color: #1FCDFF;
+    color: var(--link-color);
     text-decoration: none;
 }
 
@@ -80,7 +125,7 @@ a:hover {
 
 .input__container {
     position: relative;
-    background: #f0f0f0;
+    background: var(--bg-secondary);
     padding: 15px;
     margin-bottom: 40px;
 
@@ -88,20 +133,19 @@ a:hover {
     flex-direction: column;
     gap: 10px;
 
-    border: 4px solid #000;
+    border: 4px solid var(--border-color);
     max-width: 390px;
 
-    /* 🔥 REMOVIDO 3D (causador do blur) */
     transform: scale(1);
 
     transition: all 0.3s ease;
 
-    box-shadow: 10px 10px 0 #000;
+    box-shadow: 10px 10px 0 var(--shadow-color);
 }
 
 .input__container:hover {
     transform: scale(1.03);
-    box-shadow: 15px 15px 0 #1FCDFF;
+    box-shadow: 15px 15px 0 var(--accent-color);
 }
 
 /* ---------------- LABEL DECORATIVO ---------------- */
@@ -112,13 +156,13 @@ a:hover {
     top: -18px;
     left: 15px;
 
-    background: #1FCDFF;
-    color: #333333;
+    background: var(--accent-color);
+    color: var(--text-primary);
     font-weight: bold;
     padding: 4px 8px;
     font-size: 12px;
 
-    border: 2px solid #000;
+    border: 2px solid var(--border-color);
 }
 
 /* ---------------- INPUT GROUPS ---------------- */
@@ -134,8 +178,8 @@ a:hover {
 
 .input__button__shadow {
     cursor: pointer;
-    border: 3px solid #000;
-    background: #1FCDFF;
+    border: 3px solid var(--border-color);
+    background: var(--accent-color);
 
     display: flex;
     align-items: center;
@@ -148,25 +192,26 @@ a:hover {
 
 .input__button__shadow:hover {
     transform: translate(-3px, -3px);
-    box-shadow: 3px 3px 0 #000;
+    box-shadow: 3px 3px 0 var(--border-color);
 }
 
 .input__button__shadow svg {
     width: 20px;
     height: 20px;
+    fill: var(--text-primary);
 }
 
 /* ---------------- INPUT ---------------- */
 
 .input__search {
     width: 100%;
-    border: 3px solid #000;
+    border: 3px solid var(--border-color);
     padding: 8px;
 
     font-size: 16px;
 
-    background: #fff;
-    color: #000;
+    background: var(--input-bg);
+    color: var(--text-primary);
 
     outline: none;
 
@@ -174,16 +219,16 @@ a:hover {
 }
 
 .input__search::placeholder {
-    color: #666;
+    color: var(--text-secondary);
     font-weight: bold;
     text-transform: uppercase;
 }
 
 .input__search:hover,
 .input__search:focus {
-    background: #f9f9f9;
+    background: var(--bg-secondary);
     transform: translate(-3px, -3px);
-    box-shadow: 3px 3px 0 #000;
+    box-shadow: 3px 3px 0 var(--border-color);
 }
 
 /* ---------------- BOTÃO LOGIN ---------------- */
@@ -195,8 +240,8 @@ button[type="submit"] {
     border: none;
     border-radius: 10px;
 
-    background: #1FCDFF;
-    color: #333333;
+    background: var(--accent-color);
+    color: var(--text-primary);
     font-weight: bold;
 
     cursor: pointer;
@@ -205,10 +250,9 @@ button[type="submit"] {
 
 button[type="submit"]:hover {
     width: 70px;
-   
 }
 
-.btn_submit{
+.btn_submit {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -219,15 +263,285 @@ button[type="submit"]:hover {
 
 .register-link {
     margin-top: 15px;
-    color: #fff;
+    color: var(--text-primary);
 }
-
 
 /*----------------- formulário -----------------*/
 
-form{
+form {
     display: flex;
     flex-direction: column;
     align-items: center;
+}
 
+/* ================ DARK MODE TOGGLE BUTTON ================ */
+/* Botão de toggle personalizado para combinar com seu estilo */
+
+.dark-mode-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    cursor: pointer;
+    background: var(--accent-color);
+    border: 3px solid var(--border-color);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 5px 5px 0 var(--shadow-color);
+}
+
+.dark-mode-toggle:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 8px 8px 0 var(--border-color);
+}
+
+.dark-mode-toggle svg {
+    width: 24px;
+    height: 24px;
+    fill: var(--text-primary);
+    transition: transform 0.3s ease;
+}
+
+.dark-mode-toggle:hover svg {
+    transform: rotate(15deg);
+}
+
+/* ================ OPÇÃO 2: SEU TOGGLE DO UNIVERSE.IO ================ */
+/* Caso queira usar o toggle bonito que você tem no CSS, descomente e use este */
+
+.theme-switch {
+  --toggle-size: 30px;
+  --container-width: 5.625em;
+  --container-height: 2.5em;
+  --container-radius: 6.25em;
+  --container-light-bg: #3D7EAE;
+  --container-night-bg: #1D1F2C;
+  --circle-container-diameter: 3.375em;
+  --sun-moon-diameter: 2.125em;
+  --sun-bg: #ECCA2F;
+  --moon-bg: #C4C9D1;
+  --spot-color: #959DB1;
+  --circle-container-offset: calc((var(--circle-container-diameter) - var(--container-height)) / 2 * -1);
+  --stars-color: #fff;
+  --clouds-color: #F3FDFF;
+  --back-clouds-color: #AACADF;
+  --transition: .5s cubic-bezier(0, -0.02, 0.4, 1.25);
+  --circle-transition: .3s cubic-bezier(0, -0.02, 0.35, 1.17);
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.theme-switch, .theme-switch *, .theme-switch *::before, .theme-switch *::after {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-size: var(--toggle-size);
+}
+
+.theme-switch__container {
+  width: var(--container-width);
+  height: var(--container-height);
+  background-color: var(--container-light-bg);
+  border-radius: var(--container-radius);
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-box-shadow: 0em -0.062em 0.062em rgba(0, 0, 0, 0.25), 0em 0.062em 0.125em rgba(255, 255, 255, 0.94);
+  box-shadow: 0em -0.062em 0.062em rgba(0, 0, 0, 0.25), 0em 0.062em 0.125em rgba(255, 255, 255, 0.94);
+  -webkit-transition: var(--transition);
+  -o-transition: var(--transition);
+  transition: var(--transition);
+  position: relative;
+}
+
+.theme-switch__container::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  -webkit-box-shadow: 0em 0.05em 0.187em rgba(0, 0, 0, 0.25) inset, 0em 0.05em 0.187em rgba(0, 0, 0, 0.25) inset;
+  box-shadow: 0em 0.05em 0.187em rgba(0, 0, 0, 0.25) inset, 0em 0.05em 0.187em rgba(0, 0, 0, 0.25) inset;
+  border-radius: var(--container-radius)
+}
+
+.theme-switch__checkbox {
+  display: none;
+}
+
+.theme-switch__circle-container {
+  width: var(--circle-container-diameter);
+  height: var(--circle-container-diameter);
+  background-color: rgba(255, 255, 255, 0.1);
+  position: absolute;
+  left: var(--circle-container-offset);
+  top: var(--circle-container-offset);
+  border-radius: var(--container-radius);
+  -webkit-box-shadow: inset 0 0 0 3.375em rgba(255, 255, 255, 0.1), inset 0 0 0 3.375em rgba(255, 255, 255, 0.1), 0 0 0 0.625em rgba(255, 255, 255, 0.1), 0 0 0 1.25em rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 3.375em rgba(255, 255, 255, 0.1), inset 0 0 0 3.375em rgba(255, 255, 255, 0.1), 0 0 0 0.625em rgba(255, 255, 255, 0.1), 0 0 0 1.25em rgba(255, 255, 255, 0.1);
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-transition: var(--circle-transition);
+  -o-transition: var(--circle-transition);
+  transition: var(--circle-transition);
+  pointer-events: none;
+}
+
+.theme-switch__sun-moon-container {
+  pointer-events: auto;
+  position: relative;
+  z-index: 2;
+  width: var(--sun-moon-diameter);
+  height: var(--sun-moon-diameter);
+  margin: auto;
+  border-radius: var(--container-radius);
+  background-color: var(--sun-bg);
+  -webkit-box-shadow: 0.062em 0.062em 0.062em 0em rgba(254, 255, 239, 0.61) inset, 0em -0.062em 0.062em 0em #a1872a inset;
+  box-shadow: 0.062em 0.062em 0.062em 0em rgba(254, 255, 239, 0.61) inset, 0em -0.062em 0.062em 0em #a1872a inset;
+  -webkit-filter: drop-shadow(0.062em 0.125em 0.125em rgba(0, 0, 0, 0.25)) drop-shadow(0em 0.062em 0.125em rgba(0, 0, 0, 0.25));
+  filter: drop-shadow(0.062em 0.125em 0.125em rgba(0, 0, 0, 0.25)) drop-shadow(0em 0.062em 0.125em rgba(0, 0, 0, 0.25));
+  overflow: hidden;
+  -webkit-transition: var(--transition);
+  -o-transition: var(--transition);
+  transition: var(--transition);
+}
+
+.theme-switch__moon {
+  -webkit-transform: translateX(100%);
+  -ms-transform: translateX(100%);
+  transform: translateX(100%);
+  width: 100%;
+  height: 100%;
+  background-color: var(--moon-bg);
+  border-radius: inherit;
+  -webkit-box-shadow: 0.062em 0.062em 0.062em 0em rgba(254, 255, 239, 0.61) inset, 0em -0.062em 0.062em 0em #969696 inset;
+  box-shadow: 0.062em 0.062em 0.062em 0em rgba(254, 255, 239, 0.61) inset, 0em -0.062em 0.062em 0em #969696 inset;
+  -webkit-transition: var(--transition);
+  -o-transition: var(--transition);
+  transition: var(--transition);
+  position: relative;
+}
+
+.theme-switch__spot {
+  position: absolute;
+  top: 0.75em;
+  left: 0.312em;
+  width: 0.75em;
+  height: 0.75em;
+  border-radius: var(--container-radius);
+  background-color: var(--spot-color);
+  -webkit-box-shadow: 0em 0.0312em 0.062em rgba(0, 0, 0, 0.25) inset;
+  box-shadow: 0em 0.0312em 0.062em rgba(0, 0, 0, 0.25) inset;
+}
+
+.theme-switch__spot:nth-of-type(2) {
+  width: 0.375em;
+  height: 0.375em;
+  top: 0.937em;
+  left: 1.375em;
+}
+
+.theme-switch__spot:nth-last-of-type(3) {
+  width: 0.25em;
+  height: 0.25em;
+  top: 0.312em;
+  left: 0.812em;
+}
+
+.theme-switch__clouds {
+  width: 1.25em;
+  height: 1.25em;
+  background-color: var(--clouds-color);
+  border-radius: var(--container-radius);
+  position: absolute;
+  bottom: -0.625em;
+  left: 0.312em;
+  -webkit-box-shadow: 0.937em 0.312em var(--clouds-color), -0.312em -0.312em var(--back-clouds-color), 1.437em 0.375em var(--clouds-color), 0.5em -0.125em var(--back-clouds-color), 2.187em 0 var(--clouds-color), 1.25em -0.062em var(--back-clouds-color), 2.937em 0.312em var(--clouds-color), 2em -0.312em var(--back-clouds-color), 3.625em -0.062em var(--clouds-color), 2.625em 0em var(--back-clouds-color), 4.5em -0.312em var(--clouds-color), 3.375em -0.437em var(--back-clouds-color), 4.625em -1.75em 0 0.437em var(--clouds-color), 4em -0.625em var(--back-clouds-color), 4.125em -2.125em 0 0.437em var(--back-clouds-color);
+  box-shadow: 0.937em 0.312em var(--clouds-color), -0.312em -0.312em var(--back-clouds-color), 1.437em 0.375em var(--clouds-color), 0.5em -0.125em var(--back-clouds-color), 2.187em 0 var(--clouds-color), 1.25em -0.062em var(--back-clouds-color), 2.937em 0.312em var(--clouds-color), 2em -0.312em var(--back-clouds-color), 3.625em -0.062em var(--clouds-color), 2.625em 0em var(--back-clouds-color), 4.5em -0.312em var(--clouds-color), 3.375em -0.437em var(--back-clouds-color), 4.625em -1.75em 0 0.437em var(--clouds-color), 4em -0.625em var(--back-clouds-color), 4.125em -2.125em 0 0.437em var(--back-clouds-color);
+  -webkit-transition: 0.5s cubic-bezier(0, -0.02, 0.4, 1.25);
+  -o-transition: 0.5s cubic-bezier(0, -0.02, 0.4, 1.25);
+  transition: 0.5s cubic-bezier(0, -0.02, 0.4, 1.25);
+}
+
+.theme-switch__stars-container {
+  position: absolute;
+  color: var(--stars-color);
+  top: -100%;
+  left: 0.312em;
+  width: 2.75em;
+  height: auto;
+  -webkit-transition: var(--transition);
+  -o-transition: var(--transition);
+  transition: var(--transition);
+}
+
+/* actions */
+.theme-switch__checkbox:checked + .theme-switch__container {
+  background-color: var(--container-night-bg);
+}
+
+.theme-switch__checkbox:checked + .theme-switch__container .theme-switch__circle-container {
+  left: calc(100% - var(--circle-container-offset) - var(--circle-container-diameter));
+}
+
+.theme-switch__checkbox:checked + .theme-switch__container .theme-switch__circle-container:hover {
+  left: calc(100% - var(--circle-container-offset) - var(--circle-container-diameter) - 0.187em)
+}
+
+.theme-switch__circle-container:hover {
+  left: calc(var(--circle-container-offset) + 0.187em);
+}
+
+.theme-switch__checkbox:checked + .theme-switch__container .theme-switch__moon {
+  -webkit-transform: translate(0);
+  -ms-transform: translate(0);
+  transform: translate(0);
+}
+
+.theme-switch__checkbox:checked + .theme-switch__container .theme-switch__clouds {
+  bottom: -4.062em;
+}
+
+.theme-switch__checkbox:checked + .theme-switch__container .theme-switch__stars-container {
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+/* Ajuste para o toggle do universe.io no modo escuro */
+body.dark-mode .theme-switch__container {
+    box-shadow: 0em -0.062em 0.062em rgba(0, 0, 0, 0.5), 0em 0.062em 0.125em rgba(255, 255, 255, 0.2);
+}
+
+/* ================ RESPONSIVIDADE ================ */
+@media (max-width: 768px) {
+    .card_login {
+        width: 90%;
+        max-width: 356px;
+        margin: 0 20px;
+    }
+    
+    .dark-mode-toggle,
+    .theme-switch {
+        top: 10px;
+        right: 10px;
+    }
+    
+    .dark-mode-toggle {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .dark-mode-toggle svg {
+        width: 20px;
+        height: 20px;
+    }
 }

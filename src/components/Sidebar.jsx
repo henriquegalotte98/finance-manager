@@ -9,7 +9,7 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <h2 className="sidebar-logo"><img src={duofinanceLogo} alt="" /></h2>
+      <div className="sidebar-logo"><img src={duofinanceLogo} alt="" /></div>
 
       <nav className="sidebar-nav">
         <NavLink to="/app" end className="sidebar-link">

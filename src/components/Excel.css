@@ -10,13 +10,13 @@
   flex-direction: column;
   gap: 10px;
 
-  background: rgba(15, 23, 42, 0.55);
+  background: white;
   padding: 16px;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.month_filter > div {
+.month_filter>div {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
@@ -29,8 +29,21 @@
   gap: 12px;
 
   padding: 18px;
-}
 
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  background: white;
+
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+}
+input{
+  border: 1px solid black;
+}
 .expenses_panel .eco-btn {
   grid-column: span 2;
 }
@@ -40,9 +53,10 @@
   padding: 12px 14px;
 
   border-radius: 10px;
-  border: 1px solid var(--border);
+  border: 1px solid black;
+  
 
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.03);
   color: var(--text);
 
   transition: 0.2s;
@@ -51,9 +65,10 @@
 .eco-input:focus {
   outline: none;
   border-color: var(--primary);
-  background: rgba(255,255,255,0.05);
-  box-shadow: 0 0 0 2px rgba(99,102,241,0.2);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
 }
+
 /* BOTÕES */
 .eco-btn {
   width: 100%;
@@ -72,7 +87,8 @@
 
   border-collapse: collapse;
 
-  background: rgba(15, 23, 42, 0.55);
+    background: white;
+
   border-radius: 16px;
   overflow: hidden;
 }
@@ -114,7 +130,7 @@
 .eco-tag-shared-installments {
   background: rgba(16, 185, 129, 0.2);
   border-color: rgba(16, 185, 129, 0.45);
-  color: #a7f3d0;
+  color: black;
 }
 
 /* AÇÕES */
@@ -124,6 +140,15 @@
   cursor: pointer;
   font-size: 16px;
 }
+
+.excel {
+  padding: 20px;
+}
+
+.expenses_body th{
+    color: white;
+}
+
 
 /* MOBILE */
 @media (max-width: 768px) {
@@ -150,6 +175,7 @@
   }
 
 }
+
 .expenses_table thead th {
   position: sticky;
   top: 0;
@@ -157,9 +183,11 @@
   backdrop-filter: blur(6px);
   z-index: 1;
 }
+
 .expenses_table tbody tr:hover {
   background: rgba(255, 255, 255, 0.04);
 }
+
 .expenses_table tbody tr:nth-child(even) {
   background: rgba(255, 255, 255, 0.02);
 }
