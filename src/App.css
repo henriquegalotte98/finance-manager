@@ -2,12 +2,12 @@
 :root {
   /* Cores do tema claro */
   --bg: #f5f7fa;
-  --card: rgba(255, 255, 255, 0.95);
+  --card: rgba(47, 124, 224, 0.95);
   --border: rgba(0, 0, 0, 0.08);
   --text: #1e293b;
   --muted: #64748b;
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
+  --primary: rgba(47, 124, 224, 0.95);
+  --primary-hover: rgba(39, 104, 189, 0.95);
   --danger: #ef4444;
   --success: #10b981;
   --radius: 14px;
@@ -17,6 +17,10 @@
   --card-bg: #ffffff;
   --input-bg: rgba(0, 0, 0, 0.02);
   --shadow: rgba(0, 0, 0, 0.1);
+  --bg-header: white;
+  --bg-panel: white;
+  --bg-travel-card: rgb(131, 185, 115);
+  --bg-btn:rgba(255, 255, 255, 0.08);
 }
 
 body.dark-mode {
@@ -37,6 +41,9 @@ body.dark-mode {
   --card-bg: #1e293b;
   --input-bg: rgba(255, 255, 255, 0.03);
   --shadow: rgba(0, 0, 0, 0.45);
+  --bg-header:linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(15, 23, 42, 0.85));
+  --bg-panel: rgba(15, 23, 42, 0.55);
+  --bg-travel-card: #0D1527;
 }
 
 /* Transições suaves para todos os elementos */

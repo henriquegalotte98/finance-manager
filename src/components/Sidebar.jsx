@@ -2,6 +2,8 @@ import { NavLink } from "react-router-dom";
 import "./Sidebar.css";
 import { useAuth } from "./AuthContext";
 import duofinanceLogo from '../assets/duofinance-logo.png';
+import DarkModeToggle from "./DarkModeToggle"
+
 
 export default function Sidebar() {
   const { user } = useAuth(); // pega user do contexto
@@ -44,6 +46,9 @@ export default function Sidebar() {
           
         </NavLink>
       </nav>
+      <div className="darkmode-div">
+        <DarkModeToggle />
+      </div>
     </aside>
   );
 }

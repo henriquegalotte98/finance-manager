@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import "./Market.css";
+
 
 function Market() {
   const [rates, setRates] = useState([]);
@@ -17,7 +19,7 @@ function Market() {
       <h2>Dashboard de Câmbio</h2>
       {loading && <p>Carregando cotações...</p>}
       {!loading && (
-        <div style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
+        <div className="dolar_panel" style={{ display: "grid", gap: 10, gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
           {rates.map((item) => (
             <div key={item.code} style={{ border: "1px solid #333", borderRadius: 8, padding: 12 }}>
               <strong>{item.code}</strong>

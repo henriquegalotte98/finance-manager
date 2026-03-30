@@ -278,9 +278,7 @@ form {
 /* Botão de toggle personalizado para combinar com seu estilo */
 
 .dark-mode-toggle {
-    position: fixed;
-    top: 20px;
-    right: 20px;
+    
     z-index: 1000;
     cursor: pointer;
     background: var(--accent-color);

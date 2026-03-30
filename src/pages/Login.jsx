@@ -7,6 +7,7 @@ import duofinanceLogo from '../assets/duofinance-logo.png';
 import passwordLogo from '../assets/password.svg';
 import "../pages/Login.css";
 import DarkModeToggle from '../components/DarkModeToggle';
+import { style } from "framer-motion/client";
 //src\assets\duofinance-logo.png
 function Login() {
   const [email, setEmail] = useState("");
@@ -52,7 +53,6 @@ function Login() {
   return (
 
     <div className="init_screen" >
-      <DarkModeToggle />
 
       <div style={{ display: showDiv1 ? "flex" : "none" }} className="login-container">
         <div className="card_login">
@@ -121,9 +121,9 @@ function Login() {
         <div className="register-link">
           Não tem uma conta? <Link to="/register">Cadastre-se</Link>
         </div>
-        <div>
-
+        <div style={{marginTop:"20px"}}>
           
+          <DarkModeToggle />
           
         </div>
 

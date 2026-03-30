@@ -4,6 +4,7 @@ import LogoutButton from "./LogoutButton";
 import api from "../services/api";
 import { useAuth } from '../components/AuthContext';
 import DarkModeToggle from "./DarkModeToggle";
+import "./Profile.css"
 
 function Profile() {
   const { user } = useAuth(); // Pegando o usuário do contexto de autenticação
@@ -63,9 +64,9 @@ function Profile() {
 
     setIsLoading(true);
     try {
-      await api.post("/couple/join", { 
+      await api.post("/couple/join", {
         userId: user.id,  // CORRIGIDO: agora usa user.id em vez de currentUserId
-        code: joinCode.trim() 
+        code: joinCode.trim()
       });
       setFeedback("Você entrou no casal com sucesso!");
       setJoinCode(""); // Limpa o campo após entrar
@@ -79,32 +80,31 @@ function Profile() {
   };
 
   // Toggle morar junto - VERSÃO CORRIGIDA
-const onToggleLiving = async (event) => {
-  if (!coupleInfo.couple) {
-    setFeedback("Você precisa estar em um casal primeiro.");
-    return;
-  }
+  const onToggleLiving = async (event) => {
+    if (!coupleInfo.couple) {
+      setFeedback("Você precisa estar em um casal primeiro.");
+      return;
+    }
 
-  const newValue = event.target.checked; // Declare a variável aqui
-  
-  try {
-    setLivingTogether(newValue);
-    await api.post("/features/couple/living-together", { livingTogether: newValue });
-    setFeedback("Opção 'Morar junto' atualizada!");
-  } catch (err) {
-    console.error("Erro ao atualizar:", err);
-    setFeedback("Erro ao atualizar opção 'Morar junto'.");
-    setLivingTogether(!newValue); // Reverte em caso de erro
-  }
-};
+    const newValue = event.target.checked; // Declare a variável aqui
+
+    try {
+      setLivingTogether(newValue);
+      await api.post("/features/couple/living-together", { livingTogether: newValue });
+      setFeedback("Opção 'Morar junto' atualizada!");
+    } catch (err) {
+      console.error("Erro ao atualizar:", err);
+      setFeedback("Erro ao atualizar opção 'Morar junto'.");
+      setLivingTogether(!newValue); // Reverte em caso de erro
+    }
+  };
 
   return (
     <div style={{ padding: "20px", maxWidth: "600px", margin: "0 auto" }}>
-      <h2>Perfil e Recursos do Casal</h2>
-      
+
       {feedback && (
-        <p style={{ 
-          padding: "10px", 
+        <p style={{
+          padding: "10px",
           backgroundColor: feedback.includes("Erro") ? "#ffebee" : "#e8f5e9",
           color: feedback.includes("Erro") ? "#c62828" : "#2e7d32",
           borderRadius: "4px",
@@ -113,23 +113,26 @@ const onToggleLiving = async (event) => {
           {feedback}
         </p>
       )}
+
+      <div className="profile-panel">
+      <h2>Perfil</h2>
+        <ImportFile />
+        <LogoutButton />
+      </div>
       
-      <ImportFile />
-      <LogoutButton />
-      <DarkModeToggle />
-      <section style={{ marginTop: "20px" }}>
-        <h3>Casal</h3>
+      <section style={{ marginTop: "20px" }} className="profile-panel">
+        <h3>Recursos do Casal</h3>
         <p>
-          <strong>Membros:</strong> {coupleInfo.members.length > 0 
-            ? coupleInfo.members.map((m) => m.name).join(", ") 
+          <strong>Membros:</strong> {coupleInfo.members.length > 0
+            ? coupleInfo.members.map((m) => m.name).join(", ")
             : "Sem casal no momento"}
         </p>
 
         {!coupleInfo.couple ? (
           <div>
             <div style={{ marginBottom: "20px" }}>
-              <button 
-                onClick={createCouple} 
+              <button
+                onClick={createCouple}
                 disabled={isLoading}
                 style={{
                   padding: "10px 20px",
@@ -168,8 +171,8 @@ const onToggleLiving = async (event) => {
                   borderRadius: "4px"
                 }}
               />
-              <button 
-                onClick={joinCouple} 
+              <button
+                onClick={joinCouple}
                 disabled={isLoading || !joinCode.trim()}
                 style={{
                   padding: "10px 20px",
@@ -188,14 +191,14 @@ const onToggleLiving = async (event) => {
         ) : (
           <div>
             <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <input 
-                type="checkbox" 
-                checked={livingTogether} 
-                onChange={onToggleLiving} 
+              <input
+                type="checkbox"
+                checked={livingTogether}
+                onChange={onToggleLiving}
               />
               Morar junto (gastos compartilhados)
             </label>
-            
+
             <div style={{ marginTop: "15px", padding: "10px", backgroundColor: "#f5f5f5", borderRadius: "4px" }}>
               <strong>Status do casal:</strong> Conectado
               {coupleInfo.members.length === 2 && (

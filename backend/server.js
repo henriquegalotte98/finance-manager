@@ -17,6 +17,8 @@ import expensesRoutes from "./routes/expenses.routes.js";
 import featureRoutes, { ensureFeatureSchema } from "./routes/feature.routes.js";
 import { authMiddleware } from "./middleware/auth.js";
 
+
+
 const app = express();
 
 console.log("ENV CHECK:", {

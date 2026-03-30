@@ -39,7 +39,7 @@ function Excel({ activeApp }) {
   return (
     <div id="excel" className="excel">
 
-
+      <h1>Planilha de Despesas</h1>
       <div className="month_filter">
         <h3>Filtrar por Mês</h3>
 

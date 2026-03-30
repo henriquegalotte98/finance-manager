@@ -50,6 +50,8 @@
 .sidebar {
   width: 130px;
   background: #F5F5F5;
+  display: flex;
+  flex-direction: column;
   
   padding: 20px;
 }
@@ -76,8 +78,22 @@
 }
 .profile_section{
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: space-around;
+
+}
+.profile_name{
+  text-align: center;
+  
+}
+
+.darkmode-div{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 250px;
+    
 
 }
