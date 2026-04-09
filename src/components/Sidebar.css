@@ -10,6 +10,8 @@
   justify-content: center;
 }
 
+
+
 .sidebar-nav {
   display: flex;
   flex-direction: column;
@@ -57,7 +59,7 @@
 }
 
 .sidebar-logo img{
-  width: 200px;
+  width: 150px;
 }
 
 /* Conteúdo ocupa o resto */

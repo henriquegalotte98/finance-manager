@@ -13,11 +13,8 @@ import { pool } from "./db.js";
 
 import coupleRoutes from "./routes/couple.routes.js";
 import authRoutes from "./routes/auth.routes.js";
-import expensesRoutes from "./routes/expenses.routes.js";
 import featureRoutes, { ensureFeatureSchema } from "./routes/feature.routes.js";
 import { authMiddleware } from "./middleware/auth.js";
-
-
 
 const app = express();
 
@@ -52,23 +49,18 @@ app.use((req, res, next) => {
   next();
 });
 
-
 // ================= MIDDLEWARE =================
 app.use(express.json());
 app.use(bodyParser.json());
 
-
 // ================= ROUTES =================
-//app.use("/expenses", expensesRoutes);
 app.use("/couple", coupleRoutes);
 app.use("/auth", authRoutes);
 app.use("/features", featureRoutes);
 
-
 // ================= HEALTH =================
 app.get("/", (_req, res) => res.send("ok"));
 app.get("/healthz", (_req, res) => res.json({ status: "ok" }));
-
 
 // ================= CLOUDINARY =================
 if (
@@ -85,13 +77,11 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-
 // ================= MULTER =================
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 }
 });
-
 
 // ================= USER =================
 app.get("/users/me", authMiddleware, async (req, res) => {
@@ -116,10 +106,11 @@ app.get("/users/me", authMiddleware, async (req, res) => {
   }
 });
 
-//===================test====================
+// ================= TEST =================
 app.get("/ping", (req, res) => {
   res.send("pong");
 });
+
 // ================= UPLOAD =================
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
@@ -182,167 +173,162 @@ app.post("/upload", upload.single("file"), async (req, res) => {
   }
 });
 
-
-// ================= EXPENSES =================
+// ================= FUNÇÕES AUXILIARES =================
 function generateDate(baseDate, recurrence, index) {
   let d = new Date(baseDate);
   d.setHours(12, 0, 0, 0);
 
+  const originalDay = d.getDate();
+  const originalMonth = d.getMonth();
+  const originalYear = d.getFullYear();
+
   if (recurrence === "monthly") {
-    d.setMonth(d.getMonth() + index);
-  } else if (recurrence === "weekly") {
-    d.setDate(d.getDate() + (7 * index));
-  } else if (recurrence === "yearly") {
-    d.setFullYear(d.getFullYear() + index);
+    // Adiciona o número de meses
+    d.setMonth(originalMonth + index);
+
+    // Se o dia não existe no novo mês (ex: 31 de março + 1 mês), ajusta para o último dia do mês
+    if (d.getDate() !== originalDay) {
+      d.setDate(0); // Vai para o último dia do mês anterior
+      d.setDate(d.getDate()); // Ajusta para o último dia do mês
+    }
+  }
+  else if (recurrence === "weekly") {
+    d.setDate(originalDay + (7 * index));
+  }
+  else if (recurrence === "yearly") {
+    d.setFullYear(originalYear + index);
   }
 
   return d;
 }
 
-
 function totalInstallments(numTimes, recurrence) {
-  // Se não for recorrência ou for crédito/crediário, usa o número de parcelas
-  if (recurrence === "none") {
-    return numTimes || 1;
-  }
-
-  // Para recorrências, define um limite de tempo (ex: 12 meses, 52 semanas, 5 anos)
+  // RECORRÊNCIA: sempre cria 12 ocorrências (1 ano)
   if (recurrence === "monthly") return 12;
   if (recurrence === "weekly") return 52;
   if (recurrence === "yearly") return 5;
 
-  return 1;
+  // PARCELAMENTO ou DESPESA ÚNICA
+  return numTimes || 1;
 }
 
-app.put("/expenses/:id", async (req, res) => {
+
+// ================= EXPENSES - POST =================
+app.post("/expenses", authMiddleware, async (req, res) => {
+  const client = await pool.connect();
   try {
-    const { id } = req.params;
     const { service, price, paymentMethod, numberTimes, dueDate, recurrence } = req.body;
+    const userId = req.userId;
 
-    // Buscar a despesa existente
-    const existingExpense = await pool.query(
-      "SELECT * FROM expenses WHERE id = $1",
-      [id]
-    );
-
-    if (existingExpense.rows.length === 0) {
-      return res.status(404).json({ error: "Despesa não encontrada" });
-    }
-
-    // Atualizar a despesa
-    const result = await pool.query(
-      `UPDATE expenses
-       SET service=$1, price=$2, paymentmethod=$3, numbertimes=$4, recurrence=$5
-       WHERE id=$6 RETURNING *`,
-      [service, price, paymentMethod, numberTimes, recurrence, id]
-    );
-
-    // Opcional: Recriar as parcelas após edição
-    // Você pode optar por deletar as parcelas antigas e criar novas
-
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("🔥 ERRO PUT:", err);
-    res.status(500).json({ error: "Erro ao atualizar despesa" });
-  }
-});
-
-
-app.post("/expenses", async (req, res) => {
-  try {
     console.log("🔥 INICIOU POST /expenses");
-    const { service, price, paymentMethod, numberTimes, dueDate, recurrence } = req.body;
-
     console.log("📦 BODY:", req.body);
 
-    // ✅ validações básicas
     if (!service || !price || !dueDate) {
       return res.status(400).json({ error: "Dados incompletos" });
     }
 
-    const parsedPrice = Number(price);
-    const numTimes = Number(numberTimes) || 1;
+    const originalPrice = Number(price);
     const isRecurring = recurrence !== "none";
 
-    console.log("💰 parsedPrice:", parsedPrice);
-    console.log("🔢 numTimes:", numTimes);
-    console.log("🔁 recurrence:", recurrence);
+    await client.query("BEGIN");
 
-    let totalInstallmentsCount;
+    // VERIFICAR SE JÁ EXISTE DESPESA SIMILAR NOS ÚLTIMOS 30 SEGUNDOS
+    const recentCheck = await client.query(
+      `SELECT id FROM expenses 
+       WHERE user_id = $1 
+       AND service = $2 
+       AND recurrence = $3
+       AND created_at > NOW() - INTERVAL '30 seconds'`,
+      [userId, service, recurrence]
+    );
 
-    if (isRecurring) {
-      totalInstallmentsCount = totalInstallments(numTimes, recurrence);
-    } else {
-      totalInstallmentsCount = numTimes;
+    if (recentCheck.rows.length > 0) {
+      console.log("⚠️ Despesa duplicada detectada! Cancelando criação.");
+      await client.query("ROLLBACK");
+      return res.status(400).json({ 
+        error: "Despesa duplicada detectada. Aguarde alguns segundos antes de criar novamente.",
+        duplicateId: recentCheck.rows[0].id
+      });
     }
-    console.log("📊 totalInstallmentsCount:", totalInstallmentsCount);
-    // ✅ proteção contra NaN
-    if (!totalInstallmentsCount || isNaN(totalInstallmentsCount)) {
-      return res.status(400).json({ error: "Número de parcelas inválido" });
-    }
 
-    if (!parsedPrice || isNaN(parsedPrice)) {
-      return res.status(400).json({ error: "Preço inválido" });
-    }
-
-    console.log("TOTAL PARCELAS:", totalInstallmentsCount);
-
-    const installmentAmount = parsedPrice / totalInstallmentsCount;
-
-    // 1️⃣ cria expense
-    const expense = await pool.query(
+    // Criar a despesa principal
+    const expense = await client.query(
       `INSERT INTO expenses 
-       (service, price, paymentmethod, numbertimes, recurrence)
-       VALUES ($1,$2,$3,$4,$5) RETURNING *`,
-      [service, parsedPrice, paymentMethod, totalInstallmentsCount, recurrence]
+       (user_id, service, price, paymentmethod, numbertimes, recurrence)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [userId, service, originalPrice, paymentMethod, 1, recurrence || 'none']
     );
 
     const expenseId = expense.rows[0].id;
-    if (!totalInstallmentsCount || isNaN(totalInstallmentsCount)) {
-      console.log("❌ ERRO: parcelas inválidas");
-      return res.status(400).json({ error: "Parcelas inválidas" });
-    }
-
-    console.log("➡️ Entrou no loop de parcelas");
-    // 2️⃣ cria parcelas
-    for (let i = 0; i < totalInstallmentsCount; i++) {
-      console.log("🧾 Criando parcela:", i + 1);
-      let vencimento;
-
-      if (isRecurring) {
-        vencimento = generateDate(dueDate, recurrence, i);
-      } else {
-        if (paymentMethod === "credit_card" || paymentMethod === "credit_store") {
-          let d = new Date(dueDate);
-          d.setHours(12, 0, 0, 0);
-          d.setMonth(d.getMonth() + i);
-          vencimento = d;
-        } else {
-          vencimento = new Date(dueDate);
+    
+    let installmentsToCreate = [];
+    const startDate = new Date(dueDate);
+    startDate.setHours(12, 0, 0, 0);
+    
+    if (isRecurring) {
+      // RECORRÊNCIA: 12 ocorrências
+      const numberOfOccurrences = 12;
+      console.log(`🔄 Criando ${numberOfOccurrences} ocorrências mensais de R$ ${originalPrice.toFixed(2)}`);
+      
+      for (let i = 0; i < numberOfOccurrences; i++) {
+        let currentDate = new Date(startDate);
+        currentDate.setMonth(startDate.getMonth() + i);
+        
+        // Ajustar para o último dia do mês se necessário
+        if (currentDate.getDate() !== startDate.getDate()) {
+          currentDate.setDate(0);
+          currentDate.setDate(currentDate.getDate());
         }
+        
+        installmentsToCreate.push({
+          number: i + 1,
+          amount: originalPrice,
+          dueDate: currentDate
+        });
+        
+        console.log(`  📅 ${i+1}: ${currentDate.toISOString().split('T')[0]} - R$ ${originalPrice.toFixed(2)}`);
       }
-
-      console.log("PARCELA:", i + 1, "DATA:", vencimento);
-
-      await pool.query(
+    } else {
+      // DESPESA ÚNICA
+      installmentsToCreate.push({
+        number: 1,
+        amount: originalPrice,
+        dueDate: startDate
+      });
+    }
+    
+    // Inserir as parcelas
+    for (const inst of installmentsToCreate) {
+      await client.query(
         `INSERT INTO installments 
          (expense_id, installment_number, amount, duedate, total_installments)
-         VALUES ($1,$2,$3,$4,$5)`,
-        [expenseId, i + 1, installmentAmount, vencimento, totalInstallmentsCount]
+         VALUES ($1, $2, $3, $4, $5)`,
+        [expenseId, inst.number, inst.amount, inst.dueDate, installmentsToCreate.length]
       );
     }
-
-    res.json({ message: "Despesa criada com sucesso", expenseId });
+    
+    await client.query("COMMIT");
+    console.log(`✅ ${installmentsToCreate.length} parcelas criadas com sucesso!`);
+    res.json({ 
+      message: "Despesa criada com sucesso", 
+      expenseId,
+      installments: installmentsToCreate.length 
+    });
 
   } catch (err) {
+    await client.query("ROLLBACK");
     console.error("🔥 ERRO AO CRIAR DESPESA:", err);
     res.status(500).json({ error: "Erro ao adicionar despesa: " + err.message });
+  } finally {
+    client.release();
   }
 });
 
-app.get("/expenses/month/:year/:month", async (req, res) => {
+// ================= EXPENSES - GET MONTH =================
+app.get("/expenses/month/:year/:month", authMiddleware, async (req, res) => {
   try {
     const { year, month } = req.params;
+    const userId = req.userId;
 
     const result = await pool.query(
       `SELECT 
@@ -358,14 +344,14 @@ app.get("/expenses/month/:year/:month", async (req, res) => {
         e.id as expense_id
        FROM installments i
        JOIN expenses e ON e.id = i.expense_id
-       WHERE i.duedate >= DATE_TRUNC('month', TO_DATE($1 || '-' || $2 || '-01', 'YYYY-MM-DD'))
-       AND i.duedate < DATE_TRUNC('month', TO_DATE($1 || '-' || $2 || '-01', 'YYYY-MM-DD')) + INTERVAL '1 month'
+       WHERE e.user_id = $1
+       AND i.duedate >= DATE_TRUNC('month', TO_DATE($2 || '-' || $3 || '-01', 'YYYY-MM-DD'))
+       AND i.duedate < DATE_TRUNC('month', TO_DATE($2 || '-' || $3 || '-01', 'YYYY-MM-DD')) + INTERVAL '1 month'
        ORDER BY i.duedate`,
-      [year, month]
+      [userId, year, month]
     );
 
-    console.log("RESULT:", result.rows);
-
+    console.log(`📊 Carregadas ${result.rows.length} despesas para ${month}/${year}`);
     res.json(result.rows);
 
   } catch (err) {
@@ -374,24 +360,80 @@ app.get("/expenses/month/:year/:month", async (req, res) => {
   }
 });
 
-app.delete("/expenses/:id", async (req, res) => {
+// ================= EXPENSES - PUT =================
+app.put("/expenses/:id", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
+    const { service, price, paymentMethod, dueDate, recurrence } = req.body;
+    const userId = req.userId;
 
-    // Deletar as parcelas primeiro (por causa da FK)
-    await pool.query("DELETE FROM installments WHERE expense_id = $1", [id]);
+    console.log(`📝 Atualizando despesa ID: ${id}`);
 
-    // Depois deletar a despesa
-    const result = await pool.query(
-      "DELETE FROM expenses WHERE id = $1 RETURNING id",
-      [id]
+    // Verificar se a parcela pertence ao usuário
+    const checkResult = await pool.query(
+      `SELECT i.expense_id FROM installments i
+       JOIN expenses e ON e.id = i.expense_id
+       WHERE i.id = $1 AND e.user_id = $2`,
+      [id, userId]
     );
 
-    if (result.rows.length === 0) {
+    if (checkResult.rows.length === 0) {
       return res.status(404).json({ error: "Despesa não encontrada" });
     }
 
+    const expenseId = checkResult.rows[0].expense_id;
+
+    // Atualizar a despesa principal
+    await pool.query(
+      `UPDATE expenses
+       SET service = $1, price = $2, paymentmethod = $3, recurrence = $4
+       WHERE id = $5`,
+      [service, price, paymentMethod, recurrence, expenseId]
+    );
+
+    // Atualizar a parcela específica
+    const result = await pool.query(
+      `UPDATE installments
+       SET amount = $1, duedate = $2
+       WHERE id = $3 RETURNING *`,
+      [price, dueDate, id]
+    );
+
+    console.log(`✅ Despesa ${id} atualizada com sucesso`);
+    res.json(result.rows[0]);
+
+  } catch (err) {
+    console.error("🔥 ERRO PUT:", err);
+    res.status(500).json({ error: "Erro ao atualizar despesa" });
+  }
+});
+
+// ================= EXPENSES - DELETE =================
+app.delete("/expenses/:id", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.userId;
+
+    console.log(`🗑️ Deletando despesa ID: ${id}`);
+
+    // Verificar se a parcela pertence ao usuário
+    const checkResult = await pool.query(
+      `SELECT i.id FROM installments i
+       JOIN expenses e ON e.id = i.expense_id
+       WHERE i.id = $1 AND e.user_id = $2`,
+      [id, userId]
+    );
+
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ error: "Despesa não encontrada" });
+    }
+
+    // Deletar a parcela específica
+    await pool.query("DELETE FROM installments WHERE id = $1", [id]);
+
+    console.log(`✅ Despesa ${id} deletada com sucesso`);
     res.json({ message: "Despesa deletada com sucesso" });
+
   } catch (err) {
     console.error("🔥 ERRO AO DELETAR:", err);
     res.status(500).json({ error: "Erro ao deletar despesa" });
@@ -447,14 +489,11 @@ app.get("/dashboard/monthly", async (req, res) => {
   }
 });
 
-
 // ================= INIT =================
 ensureFeatureSchema().catch(console.error);
 
-
 // ================= EXPORT =================
 export default app;
-
 
 // ================= LOCAL =================
 if (process.env.NODE_ENV !== "production") {

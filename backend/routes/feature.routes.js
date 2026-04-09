@@ -326,6 +326,45 @@ router.put("/lists/items/:itemId", authMiddleware, async (req, res) => {
   }
 });
 
+// Adicione esta rota no arquivo de rotas de despesas
+router.delete("/expenses/:id", authMiddleware, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const expenseId = req.params.id;
+    console.log(`🗑️ Deletando despesa ID: ${expenseId} - Usuário: ${req.userId}`);
+
+    // Verificar se a despesa existe e pertence ao usuário
+    const expenseCheck = await client.query(
+      "SELECT id, user_id FROM expenses WHERE id = $1",
+      [expenseId]
+    );
+
+    if (expenseCheck.rows.length === 0) {
+      console.log(`❌ Despesa ${expenseId} não encontrada`);
+      return res.status(404).json({ error: "Despesa não encontrada" });
+    }
+
+    // Verificar se o usuário tem permissão
+    if (expenseCheck.rows[0].user_id !== req.userId) {
+      console.log(`❌ Usuário ${req.userId} não tem permissão para deletar despesa ${expenseId}`);
+      return res.status(403).json({ error: "Sem permissão para deletar esta despesa" });
+    }
+
+    // Deletar a despesa
+    await client.query("DELETE FROM expenses WHERE id = $1", [expenseId]);
+
+    console.log(`✅ Despesa ${expenseId} deletada com sucesso`);
+    res.json({ success: true, message: "Despesa deletada com sucesso" });
+
+  } catch (error) {
+    console.error("❌ Erro ao deletar despesa:", error);
+    await client.query("ROLLBACK");
+    res.status(500).json({ error: "Erro ao deletar despesa: " + error.message });
+  } finally {
+    client.release();
+  }
+});
+
 router.delete("/lists/items/:itemId", authMiddleware, async (req, res) => {
   try {
     await pool.query("DELETE FROM shared_list_items WHERE id=$1", [req.params.itemId]);
@@ -734,10 +773,10 @@ router.patch("/savings/:walletId", authMiddleware, async (req, res) => {
     console.log('Wallet ID:', req.params.walletId);
     console.log('User ID:', req.userId);
     console.log('Body:', req.body);
-    
+
     const { name, is_shared } = req.body;
     const coupleId = await getCoupleId(req.userId);
-    
+
     const result = await pool.query(
       `UPDATE savings_wallets
        SET name = COALESCE($1, name),
@@ -747,14 +786,14 @@ router.patch("/savings/:walletId", authMiddleware, async (req, res) => {
        RETURNING *`,
       [name || null, typeof is_shared === "boolean" ? is_shared : null, coupleId, req.params.walletId, req.userId]
     );
-    
+
     console.log('Rows affected:', result.rowCount);
     console.log('Updated wallet:', result.rows[0]);
-    
+
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Carteira não encontrada ou você não é o dono" });
     }
-    
+
     res.json({ success: true });
   } catch (err) {
     console.error('Erro detalhado no PATCH savings:', err);
