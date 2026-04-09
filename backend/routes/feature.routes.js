@@ -891,4 +891,160 @@ router.post("/dev/seed-demo", async (req, res) => {
   }
 });
 
+// backend/src/routes/feature.routes.js
+
+// ================= TRANSPORTE DA VIAGEM =================
+// Salvar dados de transporte
+router.post("/travel/:planId/transport", authMiddleware, async (req, res) => {
+  try {
+    const { planId } = req.params;
+    const transportData = req.body;
+
+    // Verificar se o usuário tem permissão na viagem
+    const planCheck = await pool.query(
+      `SELECT id FROM travel_plans 
+       WHERE id = $1 AND (owner_user_id = $2 OR is_shared = true)`,
+      [planId, req.userId]
+    );
+
+    if (planCheck.rows.length === 0) {
+      return res.status(403).json({ error: "Acesso negado a esta viagem" });
+    }
+
+    await pool.query(
+      `INSERT INTO travel_transport (travel_plan_id, user_id, transport_data, updated_at)
+       VALUES ($1, $2, $3, NOW())
+       ON CONFLICT (travel_plan_id) DO UPDATE 
+       SET transport_data = EXCLUDED.transport_data, updated_at = NOW()`,
+      [planId, req.userId, JSON.stringify(transportData)]
+    );
+
+    res.json({ success: true, message: "Transporte salvo com sucesso" });
+  } catch (error) {
+    console.error("Erro ao salvar transporte:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Buscar dados de transporte
+router.get("/travel/:planId/transport", authMiddleware, async (req, res) => {
+  try {
+    const { planId } = req.params;
+
+    const result = await pool.query(
+      `SELECT transport_data FROM travel_transport WHERE travel_plan_id = $1`,
+      [planId]
+    );
+
+    res.json(result.rows[0]?.transport_data || {});
+  } catch (error) {
+    console.error("Erro ao buscar transporte:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ================= SERVIÇOS DA VIAGEM =================
+// Criar serviço
+router.post("/travel/:planId/services", authMiddleware, async (req, res) => {
+  try {
+    const { planId } = req.params;
+    const { title, description, value, bookingDate, usageDate, category, status } = req.body;
+
+    // Verificar permissão
+    const planCheck = await pool.query(
+      `SELECT id FROM travel_plans 
+       WHERE id = $1 AND (owner_user_id = $2 OR is_shared = true)`,
+      [planId, req.userId]
+    );
+
+    if (planCheck.rows.length === 0) {
+      return res.status(403).json({ error: "Acesso negado a esta viagem" });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO travel_services 
+       (travel_plan_id, user_id, title, description, value, booking_date, usage_date, category, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING *`,
+      [planId, req.userId, title, description, value, bookingDate, usageDate, category, status || 'planejado']
+    );
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Erro ao criar serviço:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Listar serviços da viagem
+router.get("/travel/:planId/services", authMiddleware, async (req, res) => {
+  try {
+    const { planId } = req.params;
+
+    const result = await pool.query(
+      `SELECT * FROM travel_services 
+       WHERE travel_plan_id = $1 
+       ORDER BY created_at DESC`,
+      [planId]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Erro ao listar serviços:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Atualizar serviço
+router.put("/travel/services/:serviceId", authMiddleware, async (req, res) => {
+  try {
+    const { serviceId } = req.params;
+    const { title, description, value, bookingDate, usageDate, category, status } = req.body;
+
+    const result = await pool.query(
+      `UPDATE travel_services 
+       SET title = $1, description = $2, value = $3, 
+           booking_date = $4, usage_date = $5, 
+           category = $6, status = $7, updated_at = NOW()
+       WHERE id = $8 AND user_id = $9
+       RETURNING *`,
+      [title, description, value, bookingDate, usageDate, category, status, serviceId, req.userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Serviço não encontrado" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Erro ao atualizar serviço:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Deletar serviço
+router.delete("/travel/services/:serviceId", authMiddleware, async (req, res) => {
+  try {
+    const { serviceId } = req.params;
+
+    const result = await pool.query(
+      `DELETE FROM travel_services 
+       WHERE id = $1 AND user_id = $2`,
+      [serviceId, req.userId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Serviço não encontrado" });
+    }
+
+    res.json({ success: true, message: "Serviço removido" });
+  } catch (error) {
+    console.error("Erro ao deletar serviço:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+
+
 export default router;
